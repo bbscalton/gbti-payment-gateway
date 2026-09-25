@@ -1,0 +1,10 @@
+# Local Wrangler secrets — DO NOT COMMIT
+# Copy to .dev.vars for `wrangler dev`
+
+WEBHOOK_SECRET=gbti_sandbox_webhook_secret_change_me
+# PUBLIC_BASE_URL=  # leave empty to use request origin
+
+# Optional Firestore mirror (service account — never commit real keys)
+# FIREBASE_PROJECT_ID=
+# FIREBASE_CLIENT_EMAIL=
+# FIREBASE_PRIVATE_KEY=

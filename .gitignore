@@ -1,0 +1,26 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+app/build
+backend/node_modules
+backend/.env
+backend/data/orders.json
+workers/node_modules
+workers/.wrangler
+workers/.dev.vars
+*.apk
+*.ap_
+*.aab
+# Real Firebase/Android config — use google-services.json.example
+app/google-services.json
+# Service account keys / secrets
+**/service-account*.json
+**/*-sa.json
+.env
+.dev.vars

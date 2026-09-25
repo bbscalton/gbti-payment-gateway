@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "gbti-payment-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "kv_namespaces": [
+    {
+      "binding": "ORDERS",
+      "id": "f0d2ab1b760944a7841347342b353ee6"
+    }
+  ],
+  "vars": {
+    // Overridden at runtime by request origin when unset / empty after deploy.
+    // Set via `wrangler secret put` or dashboard after first deploy if needed.
+    "PUBLIC_BASE_URL": ""
+  }
+  // Secrets (set with wrangler secret put — never commit):
+  //   WEBHOOK_SECRET
+  //   FIREBASE_PROJECT_ID (optional)
+  //   FIREBASE_CLIENT_EMAIL (optional)
+  //   FIREBASE_PRIVATE_KEY (optional) — service account private key PEM
+}

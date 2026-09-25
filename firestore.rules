@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Demo: allow read of a single order by document id.
+    // Writes only from Admin SDK / Worker service account (bypasses rules).
+    // NEVER store PAN, CVV, or expiry in these documents.
+    match /orders/{orderId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
