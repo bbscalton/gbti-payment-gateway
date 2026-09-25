@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GBTI Payment Gateway — Sandbox Docs</title>
-  <meta name="description" content="How to use the GBTI sandbox payment gateway, call the live Worker API, run the Android app, and build the APK." />
+  <meta name="description" content="How the GBTI sandbox payment gateway works — fake test payments, hosted checkout flow, test cards, live Worker API, and Android APK." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
@@ -21,6 +21,7 @@
   <header class="top">
     <a class="mark" href="#top">GBTI</a>
     <nav>
+      <a href="#sandbox">Sandbox</a>
       <a href="#use">Use the app</a>
       <a href="#build">Build APK</a>
       <a href="#api">API</a>
@@ -44,6 +45,113 @@
       </div>
     </section>
 
+    <section id="sandbox" class="block">
+      <h2>How the sandbox works</h2>
+      <p class="section-lede">
+        A sandbox is a safe practice environment: you can run the full payment path with
+        fake test cards and no real money. Nothing settles to a bank account.
+      </p>
+
+      <ol class="flow" aria-label="Sandbox payment flow">
+        <li>
+          <span class="flow-step">1</span>
+          <span class="flow-body">
+            <strong>Create order</strong>
+            The app or API asks the Worker for a new order (amount in GYD).
+          </span>
+        </li>
+        <li>
+          <span class="flow-step">2</span>
+          <span class="flow-body">
+            <strong>Hosted checkout</strong>
+            Pay opens a secure checkout page on the Worker — card fields never enter the merchant app.
+          </span>
+        </li>
+        <li>
+          <span class="flow-step">3</span>
+          <span class="flow-body">
+            <strong>Mock processor</strong>
+            A stand-in “acquirer” accepts or declines the test card in memory. No real charge.
+          </span>
+        </li>
+        <li>
+          <span class="flow-step">4</span>
+          <span class="flow-body">
+            <strong>Webhook</strong>
+            The Worker signs a payment result and updates the order to <code>paid</code> or <code>failed</code>.
+          </span>
+        </li>
+        <li>
+          <span class="flow-step">5</span>
+          <span class="flow-body">
+            <strong>Firestore mirror</strong>
+            Order status is copied to Firebase so the Android app can show it live.
+          </span>
+        </li>
+      </ol>
+
+      <h3>What is real vs fake</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Piece</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>HTTPS Worker hosting &amp; API</td>
+              <td>Real cloud service (Cloudflare Workers, D1, public URL)</td>
+            </tr>
+            <tr>
+              <td>Hosted checkout page</td>
+              <td>Real HTML over HTTPS — still demo-only branding</td>
+            </tr>
+            <tr>
+              <td>Card charges &amp; bank settlement</td>
+              <td>Fake — mock processor, no money moves</td>
+            </tr>
+            <tr>
+              <td>GBTI Bank production systems</td>
+              <td>Not connected — this is not live GBTI</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Test cards</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Card number</th><th>What happens</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>4111 1111 1111 1111</code></td>
+              <td>Approved → webhook marks order <code>paid</code></td>
+            </tr>
+            <tr>
+              <td><code>4000 0000 0000 0002</code></td>
+              <td>Declined → webhook marks order <code>failed</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Use any future expiry and any 3-digit CVV (for example <code>12/28</code> and <code>123</code>). Do not enter a real card number.</p>
+
+      <h3>What does not happen</h3>
+      <ul class="bullets">
+        <li>No bank settlement, ACH, or wire — balances never change in the real world.</li>
+        <li>No real primary account number (PAN), CVV, or expiry is stored in the app, D1, KV, or Firestore.</li>
+        <li>No affiliation with live GBTI merchant credentials or production rails.</li>
+      </ul>
+
+      <h3>Toward a real GBTI integration</h3>
+      <p class="note">
+        This sandbox mirrors the shape of a real checkout: create order → hosted pay → processor → webhook → status.
+        A production build would replace the mock processor and secrets with real GBTI or acquirer APIs,
+        PCI-scoped hosting, and live credentials — same steps, real money.
+      </p>
+    </section>
+
     <section id="use" class="block">
       <h2>Use the app</h2>
       <p class="section-lede">Run the cloud demo against the live Worker and Firestore status mirror.</p>
@@ -63,22 +171,11 @@
   1:1036768290031:android:858b2df3b28d3f8baca71a ^
   --project gbti-payment-gateway -o app/google-services.json</code></pre>
         </li>
-        <li>Run on an emulator or device. Create an order → pay → complete card entry on the hosted checkout page.</li>
+        <li>
+          Run on an emulator or device. Create an order → pay → complete card entry on the hosted checkout page.
+          Use the <a href="#sandbox">sandbox test cards</a> above.
+        </li>
       </ol>
-
-      <h3>Test cards</h3>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Card number</th><th>Result</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>4111 1111 1111 1111</code></td><td>Success → webhook <code>paid</code></td></tr>
-            <tr><td><code>4000 0000 0000 0002</code></td><td>Decline → webhook <code>failed</code></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="note">Any future expiry and any 3-digit CVV (for example <code>12/28</code> and <code>123</code>).</p>
     </section>
 
     <section id="build" class="block">

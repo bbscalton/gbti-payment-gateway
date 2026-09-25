@@ -271,6 +271,61 @@ main {
   color: var(--gold);
 }
 
+.flow {
+  list-style: none;
+  margin: 0 0 2rem;
+  padding: 0;
+  max-width: 40rem;
+  border-left: 1px solid var(--line);
+}
+
+.flow li {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0 0 1.35rem 1.25rem;
+  position: relative;
+}
+
+.flow li:last-child {
+  padding-bottom: 0;
+}
+
+.flow-step {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-left: -2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--navy);
+  border: 1px solid var(--gold-soft);
+  color: var(--gold);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.flow-body {
+  display: block;
+  color: var(--muted);
+  font-size: 0.98rem;
+}
+
+.flow-body strong {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.flow-body code {
+  color: var(--ink);
+}
+
 .note {
   margin: 1rem 0 0;
   color: var(--muted);
