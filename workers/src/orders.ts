@@ -1,9 +1,16 @@
 import type { Env, Order, OrderStatus } from "./types";
 
-const KEY_PREFIX = "order:";
-
-function key(id: string): string {
-  return `${KEY_PREFIX}${id}`;
+function rowToOrder(row: Record<string, unknown>): Order {
+  return {
+    id: String(row.id),
+    amountCents: Number(row.amount_cents),
+    currency: String(row.currency),
+    description: String(row.description),
+    status: String(row.status) as OrderStatus,
+    paymentRef: row.payment_ref == null ? null : String(row.payment_ref),
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at),
+  };
 }
 
 export async function createOrder(
@@ -22,14 +29,30 @@ export async function createOrder(
     createdAt: now,
     updatedAt: now,
   };
-  await env.ORDERS.put(key(id), JSON.stringify(order));
+  await env.DB.prepare(
+    `INSERT INTO orders (id, amount_cents, currency, description, status, payment_ref, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  )
+    .bind(
+      order.id,
+      order.amountCents,
+      order.currency,
+      order.description,
+      order.status,
+      order.paymentRef,
+      order.createdAt,
+      order.updatedAt,
+    )
+    .run();
   return order;
 }
 
 export async function getOrder(env: Env, id: string): Promise<Order | null> {
-  const raw = await env.ORDERS.get(key(id));
-  if (!raw) return null;
-  return JSON.parse(raw) as Order;
+  const row = await env.DB.prepare(`SELECT * FROM orders WHERE id = ?`)
+    .bind(id)
+    .first();
+  if (!row) return null;
+  return rowToOrder(row as Record<string, unknown>);
 }
 
 export async function updateOrder(
@@ -44,19 +67,28 @@ export async function updateOrder(
     ...patch,
     updatedAt: new Date().toISOString(),
   };
-  await env.ORDERS.put(key(id), JSON.stringify(updated));
+  await env.DB.prepare(
+    `UPDATE orders
+     SET status = ?, payment_ref = ?, description = ?, updated_at = ?
+     WHERE id = ?`,
+  )
+    .bind(
+      updated.status,
+      updated.paymentRef,
+      updated.description,
+      updated.updatedAt,
+      updated.id,
+    )
+    .run();
   return updated;
 }
 
 export async function listOrders(env: Env): Promise<Order[]> {
-  const listed = await env.ORDERS.list({ prefix: KEY_PREFIX });
-  const orders: Order[] = [];
-  for (const entry of listed.keys) {
-    const raw = await env.ORDERS.get(entry.name);
-    if (raw) orders.push(JSON.parse(raw) as Order);
-  }
-  return orders.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  const result = await env.DB.prepare(
+    `SELECT * FROM orders ORDER BY created_at DESC LIMIT 200`,
+  ).all();
+  return (result.results || []).map((row) =>
+    rowToOrder(row as Record<string, unknown>),
   );
 }
 

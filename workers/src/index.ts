@@ -174,12 +174,28 @@ app.post("/mock-processor/charge", async (c) => {
   const secret = c.env.WEBHOOK_SECRET || "gbti_sandbox_webhook_secret_change_me";
   const signature = await signWebhookPayload(body, secret);
 
-  try {
-    await applyPaymentWebhook(c.env, body, `sha256=${signature}`);
-  } catch (err) {
-    console.error("[webhook] delivery failed:", err);
+  const webhookResult = await applyPaymentWebhook(
+    c.env,
+    body,
+    `sha256=${signature}`,
+  );
+  if (!webhookResult.ok) {
+    console.error("[webhook] rejected:", webhookResult.error);
+    return c.json(
+      {
+        ok: false,
+        status: "failed",
+        error: webhookResult.error || "Webhook processing failed",
+        message: webhookResult.error || "Webhook processing failed",
+      },
+      (webhookResult.status as 400 | 401 | 404 | 500) || 500,
+    );
   }
 
+  // Re-read after update (KV can be eventually consistent across colos;
+  // prefer the webhook result's order object when present).
+  const confirmed = webhookResult.order || (await getOrder(c.env, order.id));
+  const finalStatus = confirmed?.status || result.outcome;
   const redirectUrl = `${publicBase(c)}/checkout/${order.id}/result`;
   const accept = c.req.header("accept") || "";
   const wantsJson =
@@ -188,11 +204,11 @@ app.post("/mock-processor/charge", async (c) => {
 
   if (wantsJson) {
     return c.json({
-      ok: result.outcome === "paid",
-      status: result.outcome,
+      ok: finalStatus === "paid",
+      status: finalStatus,
       redirectUrl,
       message:
-        result.outcome === "paid"
+        finalStatus === "paid"
           ? "Payment accepted"
           : result.reason || "Payment declined",
     });

@@ -13,7 +13,9 @@ export interface Order {
 }
 
 export interface Env {
-  ORDERS: KVNamespace;
+  DB: D1Database;
+  /** Optional legacy KV binding — unused when D1 is configured. */
+  ORDERS?: KVNamespace;
   WEBHOOK_SECRET: string;
   /** Optional absolute public base URL; falls back to request origin. */
   PUBLIC_BASE_URL?: string;

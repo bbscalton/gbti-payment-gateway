@@ -10,7 +10,7 @@ Demo merchant checkout for **Guyana dollars (GYD)** with Visa/Mastercard via a *
 Android (Compose)
    │  HTTPS API
    ▼
-Cloudflare Worker (Hono) ──► Workers KV (orders)
+Cloudflare Worker (Hono) ──► Workers D1 (orders)
    │                              │
    │ HMAC webhook (paid/failed)   │ mirror (no card data)
    ▼                              ▼
@@ -21,7 +21,7 @@ Hosted checkout HTML         Firebase Firestore
 | Piece | Role |
 |-------|------|
 | **GitHub** | Source of truth + Actions deploy Worker on push to `main` |
-| **Cloudflare Workers** | Public HTTPS API, hosted checkout, mock processor, HMAC webhooks, KV |
+| **Cloudflare Workers** | Public HTTPS API, hosted checkout, mock processor, HMAC webhooks, **D1** order store |
 | **Firebase Firestore** | Optional realtime order-status mirror for the Android receipt screen |
 
 ### Security rules enforced
@@ -148,7 +148,7 @@ If the Firebase MCP shows `needsAuth`, complete OAuth when prompted. CLI is alre
 
 | Path | Role |
 |------|------|
-| `workers/` | Cloudflare Worker (Hono) + KV + Firestore mirror |
+| `workers/` | Cloudflare Worker (Hono) + D1 + Firestore mirror |
 | `backend/` | Legacy local Express (same routes) |
 | `app/` | Kotlin Compose merchant app |
 | `firestore.rules` | Demo read-by-id rules |
