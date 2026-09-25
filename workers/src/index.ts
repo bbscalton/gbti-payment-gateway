@@ -34,14 +34,18 @@ async function persistAndMirror(env: Env, order: Order): Promise<Order> {
   return order;
 }
 
+const DOCS_URL = "https://bbscalton.github.io/gbti-payment-gateway/";
+
 app.get("/", (c) =>
   c.json({
     ok: true,
     service: "gbti-payment-gateway-sandbox",
     runtime: "cloudflare-workers",
     health: "/health",
+    docs: DOCS_URL,
     endpoints: {
       health: "GET /health",
+      docs: "GET /docs",
       createOrder: "POST /orders",
       getOrder: "GET /orders/:id",
       pay: "POST /orders/:id/pay",
@@ -51,12 +55,16 @@ app.get("/", (c) =>
   }),
 );
 
+app.get("/docs", (c) => c.redirect(DOCS_URL, 302));
+app.get("/docs/", (c) => c.redirect(DOCS_URL, 302));
+
 app.get("/health", (c) =>
   c.json({
     ok: true,
     service: "gbti-payment-gateway-sandbox",
     runtime: "cloudflare-workers",
     firestoreMirror: firestoreConfigured(c.env),
+    docs: DOCS_URL,
     note: "Mock only — not production GBTI credentials",
   }),
 );

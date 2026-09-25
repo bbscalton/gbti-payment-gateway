@@ -2,6 +2,9 @@
 
 Demo merchant checkout for **Guyana dollars (GYD)** with Visa/Mastercard via a **hosted mock checkout**. Branded for GBTI Bank (sandbox only).
 
+**Website:** [How to use the app, API, and build the APK](https://bbscalton.github.io/gbti-payment-gateway/)  
+Also mirrored from the Worker at [`/docs`](https://gbti-payment-gateway.neuereatec.workers.dev/docs).
+
 > **Not production.** Mock/sandbox only. Never store PAN/CVV/expiry in the app, GitHub, KV, or Firestore.
 
 ## Three-piece architecture
@@ -35,9 +38,12 @@ Hosted checkout HTML         Firebase Firestore
 
 | Resource | Value |
 |----------|-------|
+| Docs site | https://bbscalton.github.io/gbti-payment-gateway/ |
 | Worker | `https://gbti-payment-gateway.neuereatec.workers.dev` |
+| Worker docs redirect | `GET /docs` |
 | Firebase project | `gbti-payment-gateway` |
 | Health | `GET /health` |
+| APK releases | https://github.com/bbscalton/gbti-payment-gateway/releases |
 
 ## Prerequisites
 
@@ -55,6 +61,17 @@ Hosted checkout HTML         Firebase Firestore
 2. In Android Studio, select the **`cloudDebug`** variant (product flavor `cloud`).
 3. Ensure `app/google-services.json` exists (download via Firebase CLI; not committed — see example file).
 4. Run on emulator or device. App talks to the Worker over HTTPS and listens to Firestore for status.
+
+### Build the APK (Windows)
+
+```bat
+cd C:\Users\Administrator\AndroidStudioProjects\Paymentgateway
+.\gradlew.bat assembleCloudDebug
+```
+
+APK output: `app\build\outputs\apk\cloud\debug\app-cloud-debug.apk`
+
+Or in Android Studio: **Build → Generate Signed Bundle / APK** (or Build APK) with the `cloud` flavor. Prefer publishing via [GitHub Releases](https://github.com/bbscalton/gbti-payment-gateway/releases) instead of committing binaries.
 
 ```bash
 # Refresh google-services.json locally (do not commit)

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GBTI Payment Gateway — Sandbox Docs</title>
+  <meta name="description" content="How to use the GBTI sandbox payment gateway, call the live Worker API, run the Android app, and build the APK." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true">
+    <div class="glow glow-a"></div>
+    <div class="glow glow-b"></div>
+    <div class="horizon"></div>
+    <div class="grain"></div>
+  </div>
+
+  <header class="top">
+    <a class="mark" href="#top">GBTI</a>
+    <nav>
+      <a href="#use">Use the app</a>
+      <a href="#build">Build APK</a>
+      <a href="#api">API</a>
+      <a href="#safety">Safety</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <p class="eyebrow">Sandbox · Guyana dollars (GYD)</p>
+      <h1 class="brand">GBTI</h1>
+      <p class="tagline">Payment Gateway</p>
+      <p class="lede">
+        A demo merchant checkout — not a live bank. Card entry stays on hosted mock checkout;
+        the Android app and merchant API never see PAN, expiry, or CVV.
+      </p>
+      <div class="cta-row">
+        <a class="btn primary" href="https://github.com/bbscalton/gbti-payment-gateway">View on GitHub</a>
+        <a class="btn ghost" href="https://gbti-payment-gateway.neuereatec.workers.dev/health">Worker health</a>
+        <a class="btn ghost" id="apk-cta" href="https://github.com/bbscalton/gbti-payment-gateway/releases">Download APK</a>
+      </div>
+    </section>
+
+    <section id="use" class="block">
+      <h2>Use the app</h2>
+      <p class="section-lede">Run the cloud demo against the live Worker and Firestore status mirror.</p>
+      <ol class="steps">
+        <li>
+          <strong>Open the project</strong> in Android Studio Hedgehog+ (JDK 17+, SDK 34/35).
+          Folder: <code>Paymentgateway</code>
+        </li>
+        <li>
+          Select the <strong>cloudDebug</strong> build variant (product flavor <code>cloud</code>).
+          It points at
+          <code>https://gbti-payment-gateway.neuereatec.workers.dev/</code>
+        </li>
+        <li>
+          Place <code>app/google-services.json</code> locally (do not commit). Refresh with Firebase CLI if needed:
+          <pre><code>npx -y firebase-tools@latest apps:sdkconfig ANDROID ^
+  1:1036768290031:android:858b2df3b28d3f8baca71a ^
+  --project gbti-payment-gateway -o app/google-services.json</code></pre>
+        </li>
+        <li>Run on an emulator or device. Create an order → pay → complete card entry on the hosted checkout page.</li>
+      </ol>
+
+      <h3>Test cards</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Card number</th><th>Result</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>4111 1111 1111 1111</code></td><td>Success → webhook <code>paid</code></td></tr>
+            <tr><td><code>4000 0000 0000 0002</code></td><td>Decline → webhook <code>failed</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Any future expiry and any 3-digit CVV (for example <code>12/28</code> and <code>123</code>).</p>
+    </section>
+
+    <section id="build" class="block">
+      <h2>Build the APK</h2>
+      <p class="section-lede">Produce an installable cloudDebug APK on Windows without shipping secrets.</p>
+
+      <h3>Gradle (fastest)</h3>
+      <pre><code>cd C:\Users\Administrator\AndroidStudioProjects\Paymentgateway
+.\gradlew.bat assembleCloudDebug</code></pre>
+      <p>
+        Output APK:
+        <code>app\build\outputs\apk\cloud\debug\app-cloud-debug.apk</code>
+      </p>
+      <pre><code>.\gradlew.bat assembleCloudRelease</code></pre>
+      <p>
+        Release APK (unsigned or with your keystore config):
+        <code>app\build\outputs\apk\cloud\release\app-cloud-release-unsigned.apk</code>
+        — or a signed APK if signing is configured.
+      </p>
+
+      <h3>Android Studio</h3>
+      <ol class="steps">
+        <li>Build → Select Build Variant → choose <strong>cloudDebug</strong> (or <strong>cloudRelease</strong>).</li>
+        <li>Build → Build Bundle(s) / APK(s) → Build APK(s), <em>or</em></li>
+        <li>Build → Generate Signed Bundle / APK → APK → pick your keystore → select the <code>cloud</code> flavor.</li>
+      </ol>
+      <p class="note">
+        Prefer publishing the APK via
+        <a href="https://github.com/bbscalton/gbti-payment-gateway/releases">GitHub Releases</a>
+        rather than committing binaries into git.
+      </p>
+    </section>
+
+    <section id="api" class="block">
+      <h2>API</h2>
+      <p class="section-lede">Live Worker base URL for HTTPS merchant calls.</p>
+      <p class="url-line">
+        <a href="https://gbti-payment-gateway.neuereatec.workers.dev/">https://gbti-payment-gateway.neuereatec.workers.dev/</a>
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Method</th><th>Path</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>GET</code></td><td><code>/health</code></td><td>Liveness + Firestore mirror flag</td></tr>
+            <tr><td><code>POST</code></td><td><code>/orders</code></td><td>Create order <code>{ amountCents, currency: "GYD", description }</code></td></tr>
+            <tr><td><code>GET</code></td><td><code>/orders/:id</code></td><td>Fetch order</td></tr>
+            <tr><td><code>POST</code></td><td><code>/orders/:id/pay</code></td><td>Returns <code>{ checkoutUrl }</code></td></tr>
+            <tr><td><code>GET</code></td><td><code>/checkout/:id</code></td><td>Hosted card form (HTML)</td></tr>
+            <tr><td><code>POST</code></td><td><code>/mock-processor/charge</code></td><td>Mock acquirer (card fields not persisted)</td></tr>
+            <tr><td><code>POST</code></td><td><code>/webhooks/payment</code></td><td>HMAC webhook; updates status</td></tr>
+            <tr><td><code>POST</code></td><td><code>/orders/:id/refund</code></td><td>Refund stub</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <pre><code>curl https://gbti-payment-gateway.neuereatec.workers.dev/health
+
+curl -X POST https://gbti-payment-gateway.neuereatec.workers.dev/orders ^
+  -H "Content-Type: application/json" ^
+  -d "{\"amountCents\":150000,\"currency\":\"GYD\",\"description\":\"Demo order\"}"</code></pre>
+    </section>
+
+    <section id="safety" class="block">
+      <h2>Safety notes</h2>
+      <p class="section-lede">This stack is educational sandbox only.</p>
+      <ul class="bullets">
+        <li>Not affiliated with live GBTI production systems. No real funds move.</li>
+        <li>Never store PAN, CVV, or expiry in the app, GitHub, D1, KV, or Firestore.</li>
+        <li>Orders become <code>paid</code> only after a verified HMAC webhook.</li>
+        <li>Do not commit <code>google-services.json</code>, <code>.env</code>, or service-account keys.</li>
+      </ul>
+      <p class="links">
+        <a href="https://github.com/bbscalton/gbti-payment-gateway">GitHub repo</a>
+        <a href="https://gbti-payment-gateway.neuereatec.workers.dev/health">Worker health</a>
+        <a href="https://console.firebase.google.com/project/gbti-payment-gateway/overview">Firebase console</a>
+        <a href="https://github.com/bbscalton/gbti-payment-gateway/releases">Releases / APK</a>
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>GBTI Payment Gateway sandbox · Demo / educational use</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
