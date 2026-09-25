@@ -253,6 +253,21 @@ main {
   color: var(--muted);
 }
 
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem 2.5rem;
+  margin: 0 0 0.5rem;
+}
+
+.split .bullets {
+  max-width: none;
+}
+
+.split h3 {
+  margin-top: 0;
+}
+
 .steps,
 .bullets {
   margin: 0;
@@ -454,5 +469,10 @@ footer {
 
   nav {
     gap: 0.65rem 1rem;
+  }
+
+  .split {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 }

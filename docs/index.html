@@ -22,6 +22,7 @@
     <a class="mark" href="#top">GBTI</a>
     <nav>
       <a href="#sandbox">Sandbox</a>
+      <a href="#golive">Go live</a>
       <a href="#use">Use the app</a>
       <a href="#build">Build APK</a>
       <a href="#api">API</a>
@@ -147,9 +148,82 @@
       <h3>Toward a real GBTI integration</h3>
       <p class="note">
         This sandbox mirrors the shape of a real checkout: create order → hosted pay → processor → webhook → status.
-        A production build would replace the mock processor and secrets with real GBTI or acquirer APIs,
-        PCI-scoped hosting, and live credentials — same steps, real money.
+        To take real payments, talk to GBTI (or your acquirer) and swap the mock for their hosted checkout —
+        see <a href="#golive">Go live with the bank</a>.
       </p>
+    </section>
+
+    <section id="golive" class="block">
+      <h2>Go live with the bank</h2>
+      <p class="section-lede">
+        This sandbox does not move money. To accept real card payments in Guyana, you onboard as a merchant
+        with GBTI (or another acquirer). Below is a practical checklist of what you typically give them,
+        and what you need back — not legal advice; the bank’s forms and agreements control.
+      </p>
+
+      <div class="split">
+        <div>
+          <h3>What you give the bank</h3>
+          <ul class="bullets">
+            <li>Business registration (e.g. company / trade name papers as they request)</li>
+            <li>Completed merchant / acquiring application</li>
+            <li>Settlement account details (GYD account where funds should land)</li>
+            <li>Business contact person and phone/email</li>
+            <li>Short description of your website or app and what customers buy</li>
+            <li>Expected volumes (rough monthly GYD and average ticket size)</li>
+            <li>Technical contact for API, webhooks, and go-live testing</li>
+          </ul>
+        </div>
+        <div>
+          <h3>What you need from the bank</h3>
+          <ul class="bullets">
+            <li>Signed merchant agreement</li>
+            <li>Merchant ID (MID)</li>
+            <li>Sandbox <em>and</em> production credentials for API or hosted checkout</li>
+            <li>Webhook / callback docs (how payment results are signed and delivered)</li>
+            <li>3-D Secure (3DS) requirements, if cards must challenge</li>
+            <li>Refund and chargeback rules</li>
+            <li>Fee schedule (MDR, fixed fees, settlement timing)</li>
+            <li>PCI guidance — usually: keep card data on their hosted page, not your servers</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>How you connect once you have it</h3>
+      <ol class="steps">
+        <li>Replace this project’s mock processor with the bank’s <strong>hosted checkout</strong> (or their approved SDK).</li>
+        <li>Point order create / pay at their test environment first; verify webhooks mark orders paid or failed.</li>
+        <li>Swap in production MID and secrets only when the bank clears you for live traffic.</li>
+        <li>Keep PAN, expiry, and CVV off your app, Worker storage, and Firestore — same rule as this sandbox.</li>
+      </ol>
+      <p class="note">
+        Same flow as the demo: create order → hosted pay → bank processor → webhook → status. Only the middle
+        steps become real GBTI rails.
+      </p>
+
+      <h3>Sample note you can send GBTI</h3>
+      <p class="note">Copy, fill in brackets, and send to your GBTI merchant / e-commerce contact:</p>
+      <pre><code>Subject: Merchant acquiring &amp; hosted checkout for [Business name]
+
+Hello,
+
+We operate [business name] in Guyana and would like to accept card payments
+online / in-app (GYD). We have a working sandbox checkout that never touches
+card data on our servers.
+
+Please advise on merchant onboarding and what you need from us (registration,
+settlement account, volumes, technical contact). We will need:
+
+• Merchant agreement and MID
+• Test and production hosted-checkout / API credentials
+• Webhook documentation and 3DS requirements
+• Refund rules, fees, and PCI guidance for hosted checkout
+
+Technical contact: [name, email, phone]
+Expected monthly volume: approx. [GYD amount]
+
+Thank you,
+[Name]</code></pre>
     </section>
 
     <section id="use" class="block">
