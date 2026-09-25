@@ -21,7 +21,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          # Wrangler 4.x requires Node 22+
+          node-version: "22"
           cache: npm
           cache-dependency-path: workers/package-lock.json
 
@@ -34,6 +35,8 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: workers
+          packageManager: npm
+          # Use the repo-pinned Wrangler 4.x from package.json (not the action's Wrangler 3 fallback)
           command: deploy
           # Secrets WEBHOOK_SECRET / FIREBASE_* should already exist on the Worker
           # (set once via `wrangler secret put`). Re-deploy does not wipe them.
