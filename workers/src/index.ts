@@ -34,6 +34,23 @@ async function persistAndMirror(env: Env, order: Order): Promise<Order> {
   return order;
 }
 
+app.get("/", (c) =>
+  c.json({
+    ok: true,
+    service: "gbti-payment-gateway-sandbox",
+    runtime: "cloudflare-workers",
+    health: "/health",
+    endpoints: {
+      health: "GET /health",
+      createOrder: "POST /orders",
+      getOrder: "GET /orders/:id",
+      pay: "POST /orders/:id/pay",
+      checkout: "GET /checkout/:id",
+    },
+    note: "Mock/sandbox only — not production GBTI credentials",
+  }),
+);
+
 app.get("/health", (c) =>
   c.json({
     ok: true,
