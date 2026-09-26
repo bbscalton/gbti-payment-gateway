@@ -1,9 +1,10 @@
 /**
- * Optional Firestore mirror via REST + service-account JWT.
- * Stores ONLY order metadata — never PAN/CVV/expiry.
+ * Neuereatec Pay — Optional Firestore Mirror
+ * Stores ONLY order metadata via REST + service-account JWT.
+ * NEVER stores PAN/CVV/expiry.
  *
  * Requires secrets: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
- * If any are missing, mirroring is a no-op (KV remains source of truth).
+ * If any are missing, mirroring is a no-op (D1 remains source of truth).
  */
 
 import type { Env, Order } from "./types";

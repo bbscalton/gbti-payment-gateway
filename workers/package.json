@@ -1,20 +1,25 @@
 {
-  "name": "gbti-payment-gateway-worker",
-  "version": "1.0.0",
+  "name": "neuereatec-pay-worker",
+  "version": "2.0.0",
   "private": true,
-  "description": "GBTI Bank sandbox payment gateway — Cloudflare Worker (Hono). Never stores PAN/CVV.",
+  "description": "Neuereatec Pay — Cloudflare Worker payment gateway. Never stores PAN/CVV.",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "types": "wrangler types",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "hono": "^4.7.2"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.5.0",
+    "@cloudflare/workers-types": "^5.20260926.1",
     "typescript": "^5.8.2",
+    "vitest": "^2.1.0",
     "wrangler": "4.119.0"
   },
   "engines": {
