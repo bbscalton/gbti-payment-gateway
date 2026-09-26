@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Double-Entry Ledger
+ * Sapp — Double-Entry Ledger
  * Tracks merchant balances, fees, refunds, and settlements
  */
 

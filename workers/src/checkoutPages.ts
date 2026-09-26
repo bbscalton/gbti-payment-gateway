@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Hosted Checkout Pages
+ * Sapp — Hosted Checkout Pages
  * Card data entry with security headers and sandbox warning
  */
 
@@ -50,7 +50,7 @@ export function renderCheckoutPage(order: Order, publicBaseUrl: string): string 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Neuereatec Pay — Secure Checkout</title>
+  <title>Sapp — Secure Checkout</title>
   <style>
     :root {
       --primary: #1a365d;
@@ -141,7 +141,7 @@ export function renderCheckoutPage(order: Order, publicBaseUrl: string): string 
   <div class="wrap">
     <div class="brand">
       <div class="mark">Secure Payment Gateway</div>
-      <h1>Neuereatec Pay</h1>
+      <h1>Sapp</h1>
       <p>Protected checkout</p>
     </div>
     <div class="panel">
@@ -233,7 +233,7 @@ export function renderResultPage(order: Order, success: boolean): string {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${title} — Neuereatec Pay</title>
+  <title>${title} — Sapp</title>
   <style>
     body {
       margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
@@ -256,7 +256,7 @@ export function renderResultPage(order: Order, success: boolean): string {
 </head>
 <body>
   <div class="card">
-    <div class="brand">Neuereatec Pay</div>
+    <div class="brand">Sapp</div>
     <div class="icon">${icon}</div>
     <h1>${title}</h1>
     <div class="amt">GYD ${amountGyd}</div>
@@ -277,7 +277,7 @@ export function render3dsChallengePage(order: Order, paymentRef: string, publicB
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>3-D Secure Challenge — Neuereatec Pay</title>
+  <title>3-D Secure Challenge — Sapp</title>
   <style>
     body {
       margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;

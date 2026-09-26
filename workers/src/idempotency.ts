@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Idempotency Key Support
+ * Sapp — Idempotency Key Support
  * Prevents duplicate operations with cached responses
  */
 

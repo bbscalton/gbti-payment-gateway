@@ -1,4 +1,4 @@
-package com.neuereatec.pay
+package com.neuereatec.sapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -7,21 +7,21 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.neuereatec.pay.ui.NeuereatecPayApp
-import com.neuereatec.pay.ui.theme.NeuereatecCream
-import com.neuereatec.pay.ui.theme.NeuereatecPayTheme
+import com.neuereatec.sapp.ui.SappApp
+import com.neuereatec.sapp.ui.theme.SappCream
+import com.neuereatec.sapp.ui.theme.SappTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            NeuereatecPayTheme {
+            SappTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = NeuereatecCream,
+                    color = SappCream,
                 ) {
-                    NeuereatecPayApp()
+                    SappApp()
                 }
             }
         }

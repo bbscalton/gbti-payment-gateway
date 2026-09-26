@@ -1,4 +1,4 @@
-package com.neuereatec.pay.data
+package com.neuereatec.sapp.data
 
 data class Order(
     val id: String,

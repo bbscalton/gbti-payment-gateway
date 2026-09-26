@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.neuereatec.pay"
+    namespace = "com.neuereatec.sapp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.neuereatec.pay"
+        applicationId = "com.neuereatec.sapp"
         minSdk = 26
         targetSdk = 35
         versionCode = 2
@@ -34,7 +34,7 @@ android {
             buildConfigField(
                 "String",
                 "API_BASE_URL",
-                "\"https://neuereatec-pay.neuereatec.workers.dev/\"",
+                "\"https://sapp-gateway.neuereatec.workers.dev/\"",
             )
             buildConfigField("boolean", "USE_FIRESTORE_STATUS", "true")
         }

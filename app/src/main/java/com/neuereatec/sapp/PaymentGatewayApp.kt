@@ -1,4 +1,4 @@
-package com.neuereatec.pay
+package com.neuereatec.sapp
 
 import android.app.Application
 import com.google.firebase.FirebaseApp

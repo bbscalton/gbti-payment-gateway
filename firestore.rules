@@ -1,7 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Neuereatec Pay — Order status mirror
+    // Sapp — Order status mirror
     // NEVER stores PAN, CVV, or expiry in these documents.
     // Writes only from Admin SDK / Worker service account (bypasses rules).
     

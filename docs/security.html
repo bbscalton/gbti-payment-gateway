@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Security Overview — Neuereatec Pay</title>
+  <title>Security Overview — Sapp</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -15,7 +15,7 @@
   </div>
 
   <header class="top">
-    <a class="mark" href="index.html">Neuereatec Pay</a>
+    <a class="mark" href="index.html">Sapp</a>
     <nav>
       <a href="index.html">Docs</a>
       <a href="security.html">Security</a>
@@ -26,11 +26,11 @@
 
   <main id="top">
     <section class="hero" style="min-height: auto; padding: 3rem 0;">
-      <p class="eyebrow">Neuereatec Pay</p>
+      <p class="eyebrow">Sapp</p>
       <h1 class="brand" style="font-size: 3rem;">Security Overview</h1>
       <p class="tagline">Payment Gateway Security Architecture</p>
       <p class="lede">
-        A summary of security measures implemented in Neuereatec Pay,
+        A summary of security measures implemented in Sapp,
         designed for review by acquiring banks and compliance teams.
       </p>
     </section>
@@ -38,7 +38,7 @@
     <section class="block">
       <h2>Executive Summary</h2>
       <p>
-        Neuereatec Pay is a payment gateway designed with security as a foundational principle.
+        Sapp is a payment gateway designed with security as a foundational principle.
         The architecture ensures that sensitive card data (PAN, CVV, expiry) never touches
         merchant systems, minimizing PCI DSS scope for merchants using our hosted checkout.
       </p>
@@ -90,7 +90,7 @@
                   │ HTTPS (Bearer token auth)
                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    NEUEREATEC PAY GATEWAY                        │
+│                         SAPP GATEWAY                             │
 │  Cloudflare Workers (Edge deployment)                           │
 │                                                                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
@@ -139,7 +139,7 @@
       <h3>Hosted Checkout Flow</h3>
       <ol class="steps">
         <li>Merchant creates an order via API (no card data)</li>
-        <li>Customer is redirected to Neuereatec Pay hosted checkout</li>
+        <li>Customer is redirected to Sapp hosted checkout</li>
         <li>Card details entered directly on our secure page</li>
         <li>Card data processed in-memory, never written to storage</li>
         <li>Result communicated via signed webhook</li>
@@ -278,7 +278,7 @@
   </main>
 
   <footer>
-    <p>© 2026 Neuereatec Enterprise (Guyana). All rights reserved.</p>
+    <p>Sapp by Neuereatec Enterprise<br>© 2026 Neuereatec Enterprise (Guyana). All rights reserved.</p>
   </footer>
 </body>
 </html>

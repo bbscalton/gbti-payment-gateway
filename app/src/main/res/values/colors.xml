@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="neuereatec_primary">#1A365D</color>
-    <color name="neuereatec_primary_deep">#0F2744</color>
-    <color name="neuereatec_accent">#38A169</color>
-    <color name="neuereatec_cream">#F7FAFC</color>
+    <color name="sapp_primary">#1A365D</color>
+    <color name="sapp_primary_deep">#0F2744</color>
+    <color name="sapp_accent">#38A169</color>
+    <color name="sapp_cream">#F7FAFC</color>
     <color name="ic_launcher_background">#1A365D</color>
 </resources>

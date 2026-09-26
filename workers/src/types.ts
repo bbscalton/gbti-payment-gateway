@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Type definitions
+ * Sapp — Type definitions
  * Card data (PAN, CVV, expiry) is NEVER stored.
  */
 

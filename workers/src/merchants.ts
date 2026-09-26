@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Merchant Management
+ * Sapp — Merchant Management
  * API key authentication and merchant CRUD operations
  */
 

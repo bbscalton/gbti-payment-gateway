@@ -1,12 +1,12 @@
 /**
- * Neuereatec Pay — Payment Gateway (Cloudflare Worker / Hono)
+ * Sapp — Payment Gateway (Cloudflare Worker / Hono)
  * 
  * A secure, multi-tenant payment gateway sandbox.
  * CRITICAL: This merchant API never accepts, stores, or logs raw PAN/CVV.
  * Card entry happens only on the hosted checkout → mock processor path.
  * Order status changes ONLY after verified webhook signature.
  * 
- * © Neuereatec Enterprise. All rights reserved.
+ * Sapp by Neuereatec Enterprise. All rights reserved.
  */
 
 import { Hono } from "hono";
@@ -172,7 +172,7 @@ async function requireWebhookSecret(env: Env): Promise<string | null> {
 app.get("/", (c) =>
   c.json({
     ok: true,
-    service: "neuereatec-pay",
+    service: "sapp-gateway",
     version: API_VERSION,
     runtime: "cloudflare-workers",
     health: "/health",
@@ -202,7 +202,7 @@ app.get("/docs/", (c) => c.redirect(DOCS_URL, 302));
 app.get("/health", (c) =>
   c.json({
     ok: true,
-    service: "neuereatec-pay",
+    service: "sapp-gateway",
     version: API_VERSION,
     runtime: "cloudflare-workers",
     firestoreMirror: firestoreConfigured(c.env),
@@ -843,7 +843,7 @@ app.post("/webhooks/payment", async (c) => {
   }
 
   const raw = await c.req.text();
-  const signature = c.req.header("x-neuereatec-signature") || undefined;
+  const signature = c.req.header("x-sapp-signature") || undefined;
   
   const result = await applyPaymentWebhook(c.env, raw, signature, secret);
   if (!result.ok) {

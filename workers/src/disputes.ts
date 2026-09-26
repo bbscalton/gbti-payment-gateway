@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Disputes and Chargebacks
+ * Sapp — Disputes and Chargebacks
  * Mock dispute management for sandbox testing
  */
 

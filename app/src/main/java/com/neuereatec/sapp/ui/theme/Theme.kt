@@ -1,4 +1,4 @@
-package com.neuereatec.pay.ui.theme
+package com.neuereatec.sapp.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
@@ -9,29 +9,29 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-val NeuereatecPrimary = Color(0xFF1A365D)
-val NeuereatecPrimaryDeep = Color(0xFF0F2744)
-val NeuereatecTeal = Color(0xFF0D9488)
-val NeuereatecAccent = Color(0xFF38A169)
-val NeuereatecCream = Color(0xFFF7FAFC)
-val NeuereatecMuted = Color(0xFF718096)
-val NeuereatecSuccess = Color(0xFF38A169)
-val NeuereatecError = Color(0xFFC53030)
+val SappPrimary = Color(0xFF1A365D)
+val SappPrimaryDeep = Color(0xFF0F2744)
+val SappTeal = Color(0xFF0D9488)
+val SappAccent = Color(0xFF38A169)
+val SappCream = Color(0xFFF7FAFC)
+val SappMuted = Color(0xFF718096)
+val SappSuccess = Color(0xFF38A169)
+val SappError = Color(0xFFC53030)
 
 private val LightColors = lightColorScheme(
-    primary = NeuereatecPrimary,
+    primary = SappPrimary,
     onPrimary = Color.White,
-    primaryContainer = NeuereatecTeal,
+    primaryContainer = SappTeal,
     onPrimaryContainer = Color.White,
-    secondary = NeuereatecAccent,
+    secondary = SappAccent,
     onSecondary = Color.White,
-    background = NeuereatecCream,
-    onBackground = NeuereatecPrimaryDeep,
+    background = SappCream,
+    onBackground = SappPrimaryDeep,
     surface = Color.White,
-    onSurface = NeuereatecPrimaryDeep,
+    onSurface = SappPrimaryDeep,
     surfaceVariant = Color(0xFFEDF2F7),
-    onSurfaceVariant = NeuereatecMuted,
-    error = NeuereatecError,
+    onSurfaceVariant = SappMuted,
+    error = SappError,
     onError = Color.White,
 )
 
@@ -76,7 +76,7 @@ private val Typography = androidx.compose.material3.Typography(
 )
 
 @Composable
-fun NeuereatecPayTheme(content: @Composable () -> Unit) {
+fun SappTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = LightColors,
         typography = Typography,

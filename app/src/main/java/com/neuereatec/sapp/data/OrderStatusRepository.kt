@@ -1,6 +1,6 @@
-package com.neuereatec.pay.data
+package com.neuereatec.sapp.data
 
-import com.neuereatec.pay.BuildConfig
+import com.neuereatec.sapp.BuildConfig
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.channels.awaitClose

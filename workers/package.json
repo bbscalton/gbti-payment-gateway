@@ -1,8 +1,8 @@
 {
-  "name": "neuereatec-pay-worker",
+  "name": "sapp-gateway-worker",
   "version": "2.0.0",
   "private": true,
-  "description": "Neuereatec Pay — Cloudflare Worker payment gateway. Never stores PAN/CVV.",
+  "description": "Sapp — Payment gateway by Neuereatec Enterprise. Never stores PAN/CVV.",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",

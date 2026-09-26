@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Error Code Catalogue
+ * Sapp — Error Code Catalogue
  * Standardized error responses with machine-readable codes
  */
 

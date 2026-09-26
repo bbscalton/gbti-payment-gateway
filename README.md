@@ -1,8 +1,8 @@
-# Neuereatec Pay — Payment Gateway
+# Sapp — Payment Gateway
 
 A secure, multi-tenant payment gateway for **Guyana dollars (GYD)** card payments. Built with Cloudflare Workers, D1, and Hono.
 
-**Owner:** Neuereatec Enterprise (Guyana)
+**Sapp by Neuereatec Enterprise (Guyana)**
 
 > **SANDBOX MODE** — This gateway is currently in test/development mode. No real payments are processed. For production deployment, the gateway is designed to integrate with an acquiring bank (planned: GBTI Bank, pending partnership agreement). There is no affiliation with or endorsement by any bank at this time.
 
@@ -71,7 +71,7 @@ npx wrangler secret put FIREBASE_PRIVATE_KEY
 ### 3. Create a Merchant Account
 
 ```bash
-curl -X POST https://YOUR-WORKER.workers.dev/v1/merchants \
+curl -X POST https://sapp-gateway.neuereatec.workers.dev/v1/merchants \
   -H "Content-Type: application/json" \
   -d '{"name": "My Store", "email": "merchant@example.com"}'
 ```
@@ -81,7 +81,7 @@ Save the `testApiKey` and `liveApiKey` returned — they won't be shown again.
 ### 4. Create an Order
 
 ```bash
-curl -X POST https://YOUR-WORKER.workers.dev/v1/orders \
+curl -X POST https://sapp-gateway.neuereatec.workers.dev/v1/orders \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk_test_..." \
   -H "Idempotency-Key: unique-request-id" \
@@ -91,7 +91,7 @@ curl -X POST https://YOUR-WORKER.workers.dev/v1/orders \
 ### 5. Get Checkout URL
 
 ```bash
-curl -X POST https://YOUR-WORKER.workers.dev/v1/orders/ORDER_ID/pay \
+curl -X POST https://sapp-gateway.neuereatec.workers.dev/v1/orders/ORDER_ID/pay \
   -H "Authorization: Bearer sk_test_..."
 ```
 
@@ -156,7 +156,7 @@ Keys are valid for 24 hours.
 Webhooks are signed with your merchant's webhook secret:
 
 ```
-X-Neuereatec-Signature: t=1234567890,v1=abc123...
+X-Sapp-Signature: t=1234567890,v1=abc123...
 ```
 
 Verify using:
@@ -169,7 +169,7 @@ function verifySignature(payload, signature, secret) {
   const timestamp = tPart.split('=')[1];
   const expectedSig = v1Part.split('=')[1];
   
-  // Check timestamp is within tolerance (5 minutes)
+  // Check timestamp within 5 minutes
   const age = Math.floor(Date.now() / 1000) - parseInt(timestamp);
   if (age > 300) return false;
   
@@ -185,7 +185,7 @@ function verifySignature(payload, signature, secret) {
 
 ## Android App
 
-The Android app package has been rebranded to `com.neuereatec.pay`.
+The Android app package is `com.neuereatec.sapp`.
 
 To build:
 
@@ -207,9 +207,9 @@ npm test
 
 After merging this PR, you must:
 
-1. **Rename GitHub repository** from `gbti-payment-gateway` to `neuereatec-pay`
+1. **Rename GitHub repository** from `gbti-payment-gateway` to `sapp-gateway`
 2. **Delete the v1.0.0-cloud-debug release** and the "GBTI Pay" APK
-3. **Create a new Firebase project** named `neuereatec-pay` (project IDs cannot be renamed)
+3. **Create a new Firebase project** named `sapp-gateway` (project IDs cannot be renamed)
 4. **Update GitHub Actions secrets** for the new Worker name
 5. **Update the Worker URL** in any integrations
 6. **Renew business registration** B35276 before approaching banks
@@ -232,6 +232,6 @@ Before processing real payments:
 ## License
 
 Proprietary — All rights reserved.
-© 2026 Neuereatec Enterprise (Guyana)
+Sapp by Neuereatec Enterprise (Guyana)
 
 See [LICENSE](LICENSE) for details.

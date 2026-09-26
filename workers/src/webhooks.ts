@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Outbound Merchant Webhooks
+ * Sapp — Outbound Merchant Webhooks
  * Signed webhook delivery with retries and event logging
  */
 
@@ -137,10 +137,10 @@ export async function deliverWebhook(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Neuereatec-Signature": signature,
-        "X-Neuereatec-Event-Id": event.id,
-        "X-Neuereatec-Event-Type": event.eventType,
-        "User-Agent": "NeuereatecPay-Webhook/1.0",
+        "X-Sapp-Signature": signature,
+        "X-Sapp-Event-Id": event.id,
+        "X-Sapp-Event-Type": event.eventType,
+        "User-Agent": "Sapp-Webhook/1.0",
       },
       body: event.payload,
     });

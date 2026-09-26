@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Optional Firestore Mirror
+ * Sapp — Optional Firestore Mirror
  * Stores ONLY order metadata via REST + service-account JWT.
  * NEVER stores PAN/CVV/expiry.
  *

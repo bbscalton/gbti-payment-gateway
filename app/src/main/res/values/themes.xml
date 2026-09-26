@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.NeuereatecPay" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/neuereatec_primary_deep</item>
-        <item name="android:navigationBarColor">@color/neuereatec_primary_deep</item>
-        <item name="android:windowBackground">@color/neuereatec_cream</item>
+    <style name="Theme.Sapp" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/sapp_primary_deep</item>
+        <item name="android:navigationBarColor">@color/sapp_primary_deep</item>
+        <item name="android:windowBackground">@color/sapp_cream</item>
     </style>
 </resources>

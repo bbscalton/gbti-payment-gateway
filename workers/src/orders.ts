@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Order Management
+ * Sapp — Order Management
  * Payment state machine with multi-tenant support
  * NEVER stores PAN, CVV, or expiry
  */

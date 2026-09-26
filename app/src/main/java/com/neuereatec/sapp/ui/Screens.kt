@@ -1,4 +1,4 @@
-package com.neuereatec.pay.ui
+package com.neuereatec.sapp.ui
 
 import android.content.Context
 import android.net.Uri
@@ -55,17 +55,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.neuereatec.pay.data.CatalogItem
-import com.neuereatec.pay.data.Order
-import com.neuereatec.pay.data.formatGyd
-import com.neuereatec.pay.ui.theme.NeuereatecAccent
-import com.neuereatec.pay.ui.theme.NeuereatecCream
-import com.neuereatec.pay.ui.theme.NeuereatecError
-import com.neuereatec.pay.ui.theme.NeuereatecMuted
-import com.neuereatec.pay.ui.theme.NeuereatecPrimary
-import com.neuereatec.pay.ui.theme.NeuereatecPrimaryDeep
-import com.neuereatec.pay.ui.theme.NeuereatecSuccess
-import com.neuereatec.pay.ui.theme.NeuereatecTeal
+import com.neuereatec.sapp.data.CatalogItem
+import com.neuereatec.sapp.data.Order
+import com.neuereatec.sapp.data.formatGyd
+import com.neuereatec.sapp.ui.theme.SappAccent
+import com.neuereatec.sapp.ui.theme.SappCream
+import com.neuereatec.sapp.ui.theme.SappError
+import com.neuereatec.sapp.ui.theme.SappMuted
+import com.neuereatec.sapp.ui.theme.SappPrimary
+import com.neuereatec.sapp.ui.theme.SappPrimaryDeep
+import com.neuereatec.sapp.ui.theme.SappSuccess
+import com.neuereatec.sapp.ui.theme.SappTeal
 
 /**
  * Opens checkout URL in Chrome Custom Tabs instead of WebView for security.
@@ -82,7 +82,7 @@ fun openCheckoutInCustomTab(context: Context, url: String) {
 }
 
 @Composable
-fun NeuereatecPayApp(vm: CheckoutViewModel = viewModel()) {
+fun SappApp(vm: CheckoutViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
@@ -129,23 +129,23 @@ private fun ShopScreen(
                 title = {
                     Column {
                         Text(
-                            "Neuereatec Pay",
+                            "Sapp",
                             style = MaterialTheme.typography.titleLarge,
                             color = Color.White,
                         )
                         Text(
                             "Merchant checkout · Guyana dollars",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = NeuereatecAccent,
+                            color = SappAccent,
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = NeuereatecPrimaryDeep,
+                    containerColor = SappPrimaryDeep,
                 ),
             )
         },
-        containerColor = NeuereatecCream,
+        containerColor = SappCream,
     ) { padding ->
         Column(
             Modifier
@@ -162,12 +162,12 @@ private fun ShopScreen(
                     Text(
                         "Select an item",
                         style = MaterialTheme.typography.titleMedium,
-                        color = NeuereatecPrimary,
+                        color = SappPrimary,
                     )
                     Text(
                         "Card details entered securely in browser — never in this app.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = NeuereatecMuted,
+                        color = SappMuted,
                         modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
                     )
                 }
@@ -202,7 +202,7 @@ private fun HeroBanner() {
         Modifier
             .fillMaxWidth()
             .background(
-                Brush.horizontalGradient(listOf(NeuereatecPrimaryDeep, NeuereatecTeal)),
+                Brush.horizontalGradient(listOf(SappPrimaryDeep, SappTeal)),
             )
             .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
@@ -210,7 +210,7 @@ private fun HeroBanner() {
             Icon(
                 Icons.Default.Security,
                 contentDescription = null,
-                tint = NeuereatecAccent,
+                tint = SappAccent,
                 modifier = Modifier.size(28.dp),
             )
             Spacer(Modifier.width(12.dp))
@@ -218,7 +218,7 @@ private fun HeroBanner() {
                 Text(
                     "SANDBOX DEMO",
                     style = MaterialTheme.typography.labelLarge,
-                    color = NeuereatecAccent,
+                    color = SappAccent,
                 )
                 Text(
                     "Visa / Mastercard · GYD · Secure browser checkout",
@@ -244,7 +244,7 @@ private fun CatalogRow(
             .background(if (selected) Color.White else Color.White.copy(alpha = 0.7f))
             .border(
                 width = if (selected) 2.dp else 1.dp,
-                color = if (selected) NeuereatecAccent else Color(0xFFE2E8F0),
+                color = if (selected) SappAccent else Color(0xFFE2E8F0),
                 shape = shape,
             )
             .clickable(onClick = onClick)
@@ -252,13 +252,13 @@ private fun CatalogRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(item.name, style = MaterialTheme.typography.titleMedium, color = NeuereatecPrimary)
-            Text(item.description, style = MaterialTheme.typography.bodyMedium, color = NeuereatecMuted)
+            Text(item.name, style = MaterialTheme.typography.titleMedium, color = SappPrimary)
+            Text(item.description, style = MaterialTheme.typography.bodyMedium, color = SappMuted)
         }
         Text(
             formatGyd(item.amountCents),
             style = MaterialTheme.typography.titleMedium,
-            color = NeuereatecPrimaryDeep,
+            color = SappPrimaryDeep,
             fontWeight = FontWeight.Bold,
         )
     }
@@ -271,7 +271,7 @@ private fun QuantityRow(qty: Int, onQty: (Int) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text("Quantity", style = MaterialTheme.typography.titleMedium, color = NeuereatecPrimary)
+        Text("Quantity", style = MaterialTheme.typography.titleMedium, color = SappPrimary)
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { onQty(qty - 1) }) {
                 Icon(Icons.Default.Remove, contentDescription = "Decrease")
@@ -308,7 +308,7 @@ private fun CheckoutBar(
         if (error != null) {
             Text(
                 error,
-                color = NeuereatecError,
+                color = SappError,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -322,13 +322,13 @@ private fun CheckoutBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
-                Text("Total", style = MaterialTheme.typography.bodyMedium, color = NeuereatecMuted)
-                Text(totalLabel, style = MaterialTheme.typography.headlineMedium, color = NeuereatecPrimary)
+                Text("Total", style = MaterialTheme.typography.bodyMedium, color = SappMuted)
+                Text(totalLabel, style = MaterialTheme.typography.headlineMedium, color = SappPrimary)
             }
             Button(
                 onClick = onPay,
                 enabled = enabled,
-                colors = ButtonDefaults.buttonColors(containerColor = NeuereatecAccent),
+                colors = ButtonDefaults.buttonColors(containerColor = SappAccent),
                 shape = RoundedCornerShape(4.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
             ) {
@@ -357,20 +357,20 @@ private fun ReceiptScreen(
     onRefresh: () -> Unit,
 ) {
     val (icon, tint, title) = when (order.status) {
-        "paid", "captured" -> Triple(Icons.Default.CheckCircle, NeuereatecSuccess, "Payment confirmed")
-        "failed" -> Triple(Icons.Default.Error, NeuereatecError, "Payment failed")
-        "refunded" -> Triple(Icons.Default.CheckCircle, NeuereatecTeal, "Refunded")
-        else -> Triple(Icons.Default.HourglassEmpty, NeuereatecAccent, "Pending confirmation")
+        "paid", "captured" -> Triple(Icons.Default.CheckCircle, SappSuccess, "Payment confirmed")
+        "failed" -> Triple(Icons.Default.Error, SappError, "Payment failed")
+        "refunded" -> Triple(Icons.Default.CheckCircle, SappTeal, "Refunded")
+        else -> Triple(Icons.Default.HourglassEmpty, SappAccent, "Pending confirmation")
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Receipt", color = Color.White) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = NeuereatecPrimaryDeep),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SappPrimaryDeep),
             )
         },
-        containerColor = NeuereatecCream,
+        containerColor = SappCream,
     ) { padding ->
         Column(
             Modifier
@@ -382,12 +382,12 @@ private fun ReceiptScreen(
             Spacer(Modifier.height(24.dp))
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(64.dp))
             Spacer(Modifier.height(12.dp))
-            Text(title, style = MaterialTheme.typography.headlineMedium, color = NeuereatecPrimary)
+            Text(title, style = MaterialTheme.typography.headlineMedium, color = SappPrimary)
             if (!pollMessage.isNullOrBlank() && order.status == "pending") {
                 Text(
                     pollMessage,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = NeuereatecAccent,
+                    color = SappAccent,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 6.dp),
                 )
@@ -395,7 +395,7 @@ private fun ReceiptScreen(
             Text(
                 "Status confirmed via signed webhook",
                 style = MaterialTheme.typography.bodyMedium,
-                color = NeuereatecMuted,
+                color = SappMuted,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 6.dp),
             )
@@ -422,7 +422,7 @@ private fun ReceiptScreen(
             Button(
                 onClick = onShopAgain,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = NeuereatecAccent),
+                colors = ButtonDefaults.buttonColors(containerColor = SappAccent),
                 shape = RoundedCornerShape(4.dp),
             ) {
                 Text("Shop again")
@@ -442,11 +442,11 @@ private fun ReceiptLine(label: String, value: String) {
             .padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = NeuereatecMuted)
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = SappMuted)
         Text(
             value,
             style = MaterialTheme.typography.bodyLarge,
-            color = NeuereatecPrimaryDeep,
+            color = SappPrimaryDeep,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.End,
             modifier = Modifier

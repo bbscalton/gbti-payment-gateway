@@ -1,14 +1,14 @@
-package com.neuereatec.pay.ui
+package com.neuereatec.sapp.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.neuereatec.pay.BuildConfig
-import com.neuereatec.pay.data.CatalogItem
-import com.neuereatec.pay.data.CreateOrderRequest
-import com.neuereatec.pay.data.DemoCatalog
-import com.neuereatec.pay.data.Order
-import com.neuereatec.pay.data.OrderStatusRepository
-import com.neuereatec.pay.network.ApiClient
+import com.neuereatec.sapp.BuildConfig
+import com.neuereatec.sapp.data.CatalogItem
+import com.neuereatec.sapp.data.CreateOrderRequest
+import com.neuereatec.sapp.data.DemoCatalog
+import com.neuereatec.sapp.data.Order
+import com.neuereatec.sapp.data.OrderStatusRepository
+import com.neuereatec.sapp.network.ApiClient
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

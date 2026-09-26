@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Audit Log
+ * Sapp — Audit Log
  * Immutable audit trail for sensitive actions
  */
 

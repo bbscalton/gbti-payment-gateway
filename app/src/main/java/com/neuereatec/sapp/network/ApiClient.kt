@@ -1,9 +1,9 @@
-package com.neuereatec.pay.network
+package com.neuereatec.sapp.network
 
-import com.neuereatec.pay.BuildConfig
-import com.neuereatec.pay.data.CreateOrderRequest
-import com.neuereatec.pay.data.Order
-import com.neuereatec.pay.data.PayResponse
+import com.neuereatec.sapp.BuildConfig
+import com.neuereatec.sapp.data.CreateOrderRequest
+import com.neuereatec.sapp.data.Order
+import com.neuereatec.sapp.data.PayResponse
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -16,7 +16,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import java.util.concurrent.TimeUnit
 
-interface NeuereatecApi {
+interface SappApi {
     @POST("orders")
     suspend fun createOrder(@Body body: CreateOrderRequest): Order
 
@@ -48,10 +48,10 @@ object ApiClient {
         )
         .build()
 
-    val api: NeuereatecApi = Retrofit.Builder()
+    val api: SappApi = Retrofit.Builder()
         .baseUrl(baseUrl)
         .client(okHttp)
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
-        .create(NeuereatecApi::class.java)
+        .create(SappApi::class.java)
 }

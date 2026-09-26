@@ -1,5 +1,5 @@
 /**
- * Neuereatec Pay — Mock Acquirer / Card Processor
+ * Sapp — Mock Acquirer / Card Processor
  * Implements the AcquirerAdapter interface for sandbox testing.
  * Card data is validated in-memory only and NEVER persisted.
  * 

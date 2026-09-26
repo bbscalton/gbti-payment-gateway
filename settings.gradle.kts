@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "NeuereatecPay"
+rootProject.name = "Sapp"
 include(":app")
