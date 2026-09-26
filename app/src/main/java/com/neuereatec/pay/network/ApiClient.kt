@@ -1,9 +1,9 @@
-package com.gbti.paymentgateway.network
+package com.neuereatec.pay.network
 
-import com.gbti.paymentgateway.BuildConfig
-import com.gbti.paymentgateway.data.CreateOrderRequest
-import com.gbti.paymentgateway.data.Order
-import com.gbti.paymentgateway.data.PayResponse
+import com.neuereatec.pay.BuildConfig
+import com.neuereatec.pay.data.CreateOrderRequest
+import com.neuereatec.pay.data.Order
+import com.neuereatec.pay.data.PayResponse
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -16,7 +16,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import java.util.concurrent.TimeUnit
 
-interface GbtiApi {
+interface NeuereatecApi {
     @POST("orders")
     suspend fun createOrder(@Body body: CreateOrderRequest): Order
 
@@ -28,10 +28,6 @@ interface GbtiApi {
 }
 
 object ApiClient {
-    /**
-     * Emulator → host machine: http://10.0.2.2:3000/
-     * Physical device on same LAN: use your PC's LAN IP instead (see README).
-     */
     val baseUrl: String = BuildConfig.API_BASE_URL
 
     private val moshi: Moshi = Moshi.Builder()
@@ -43,16 +39,19 @@ object ApiClient {
         .readTimeout(30, TimeUnit.SECONDS)
         .addInterceptor(
             HttpLoggingInterceptor().apply {
-                // BASIC only — never BODY-log potential secrets in production
-                level = HttpLoggingInterceptor.Level.BASIC
+                level = if (BuildConfig.DEBUG) {
+                    HttpLoggingInterceptor.Level.BASIC
+                } else {
+                    HttpLoggingInterceptor.Level.NONE
+                }
             }
         )
         .build()
 
-    val api: GbtiApi = Retrofit.Builder()
+    val api: NeuereatecApi = Retrofit.Builder()
         .baseUrl(baseUrl)
         .client(okHttp)
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
-        .create(GbtiApi::class.java)
+        .create(NeuereatecApi::class.java)
 }

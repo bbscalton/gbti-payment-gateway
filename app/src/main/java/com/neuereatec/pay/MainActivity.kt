@@ -1,4 +1,4 @@
-package com.gbti.paymentgateway
+package com.neuereatec.pay
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -7,21 +7,21 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.gbti.paymentgateway.ui.GbtiPaymentApp
-import com.gbti.paymentgateway.ui.theme.GbtiCream
-import com.gbti.paymentgateway.ui.theme.GbtiTheme
+import com.neuereatec.pay.ui.NeuereatecPayApp
+import com.neuereatec.pay.ui.theme.NeuereatecCream
+import com.neuereatec.pay.ui.theme.NeuereatecPayTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            GbtiTheme {
+            NeuereatecPayTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = GbtiCream,
+                    color = NeuereatecCream,
                 ) {
-                    GbtiPaymentApp()
+                    NeuereatecPayApp()
                 }
             }
         }

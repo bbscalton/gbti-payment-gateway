@@ -1,4 +1,4 @@
-package com.gbti.paymentgateway.data
+package com.neuereatec.pay.data
 
 data class Order(
     val id: String,
@@ -36,19 +36,19 @@ object DemoCatalog {
             id = "sku_demerara",
             name = "Demerara Coffee Bundle",
             description = "Local gourmet coffee assortment",
-            amountCents = 450_000L, // GYD 4,500.00
+            amountCents = 450_000L,
         ),
         CatalogItem(
             id = "sku_craft",
             name = "Georgetown Craft Market Voucher",
             description = "GYD gift voucher for partner merchants",
-            amountCents = 1_000_000L, // GYD 10,000.00
+            amountCents = 1_000_000L,
         ),
         CatalogItem(
             id = "sku_utility",
             name = "Utility Top-up",
             description = "Prepaid utility credit (demo)",
-            amountCents = 250_000L, // GYD 2,500.00
+            amountCents = 250_000L,
         ),
     )
 }

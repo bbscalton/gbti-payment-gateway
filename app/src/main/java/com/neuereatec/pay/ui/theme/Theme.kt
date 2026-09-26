@@ -1,4 +1,4 @@
-package com.gbti.paymentgateway.ui.theme
+package com.neuereatec.pay.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
@@ -9,29 +9,29 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-val GbtiNavy = Color(0xFF0B3D5C)
-val GbtiNavyDeep = Color(0xFF072A40)
-val GbtiTeal = Color(0xFF1A5F7A)
-val GbtiGold = Color(0xFFC9A227)
-val GbtiCream = Color(0xFFF7F5F0)
-val GbtiMuted = Color(0xFF5A6B75)
-val GbtiSuccess = Color(0xFF1F6F4A)
-val GbtiError = Color(0xFF9B2C2C)
+val NeuereatecPrimary = Color(0xFF1A365D)
+val NeuereatecPrimaryDeep = Color(0xFF0F2744)
+val NeuereatecTeal = Color(0xFF0D9488)
+val NeuereatecAccent = Color(0xFF38A169)
+val NeuereatecCream = Color(0xFFF7FAFC)
+val NeuereatecMuted = Color(0xFF718096)
+val NeuereatecSuccess = Color(0xFF38A169)
+val NeuereatecError = Color(0xFFC53030)
 
 private val LightColors = lightColorScheme(
-    primary = GbtiNavy,
+    primary = NeuereatecPrimary,
     onPrimary = Color.White,
-    primaryContainer = GbtiTeal,
+    primaryContainer = NeuereatecTeal,
     onPrimaryContainer = Color.White,
-    secondary = GbtiGold,
-    onSecondary = GbtiNavyDeep,
-    background = GbtiCream,
-    onBackground = GbtiNavyDeep,
+    secondary = NeuereatecAccent,
+    onSecondary = Color.White,
+    background = NeuereatecCream,
+    onBackground = NeuereatecPrimaryDeep,
     surface = Color.White,
-    onSurface = GbtiNavyDeep,
-    surfaceVariant = Color(0xFFECE7DB),
-    onSurfaceVariant = GbtiMuted,
-    error = GbtiError,
+    onSurface = NeuereatecPrimaryDeep,
+    surfaceVariant = Color(0xFFEDF2F7),
+    onSurfaceVariant = NeuereatecMuted,
+    error = NeuereatecError,
     onError = Color.White,
 )
 
@@ -76,7 +76,7 @@ private val Typography = androidx.compose.material3.Typography(
 )
 
 @Composable
-fun GbtiTheme(content: @Composable () -> Unit) {
+fun NeuereatecPayTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = LightColors,
         typography = Typography,

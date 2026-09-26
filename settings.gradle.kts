@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Paymentgateway"
+rootProject.name = "NeuereatecPay"
 include(":app")
