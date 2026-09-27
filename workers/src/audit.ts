@@ -72,8 +72,8 @@ export async function logAuditEvent(
 
 export async function listAuditLogs(
   env: Env,
+  merchantId: string,
   options?: {
-    merchantId?: string;
     action?: AuditAction;
     resourceType?: string;
     resourceId?: string;
@@ -86,13 +86,12 @@ export async function listAuditLogs(
   const limit = options?.limit ?? 100;
   const offset = options?.offset ?? 0;
 
-  let query = `SELECT * FROM audit_log WHERE 1=1`;
-  const params: (string | number)[] = [];
-
-  if (options?.merchantId) {
-    query += ` AND merchant_id = ?`;
-    params.push(options.merchantId);
+  // Always scoped to one merchant: never list the whole audit log.
+  if (!merchantId || typeof merchantId !== "string") {
+    throw new Error("listAuditLogs requires a merchantId");
   }
+  let query = `SELECT * FROM audit_log WHERE merchant_id = ?`;
+  const params: (string | number)[] = [merchantId];
   if (options?.action) {
     query += ` AND action = ?`;
     params.push(options.action);

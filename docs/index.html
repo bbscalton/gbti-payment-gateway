@@ -126,7 +126,7 @@
             <tr>
               <td><code>4000 0000 0000 3220</code></td>
               <td>3DS</td>
-              <td>3-D Secure challenge required</td>
+              <td>3-D Secure challenge required. Sandbox OTP: <code>123456</code></td>
             </tr>
             <tr>
               <td><code>5555 5555 5555 4444</code></td>
@@ -141,6 +141,17 @@
         All other card numbers (even Luhn-valid) are declined with <code>use_test_card</code> error.
         Use any future expiry (e.g., 12/28) and any 3-digit CVV.
       </p>
+      <h3>3-D Secure challenge (sandbox)</h3>
+      <p>
+        The 3DS test card makes the charge return <code>3ds_required</code> with a server-issued
+        <code>challengeId</code> and a link to the challenge page. Enter the sandbox one-time code
+        <code>123456</code>. Any other code is rejected.
+      </p>
+      <ul class="bullets">
+        <li>Each challenge expires after 10 minutes and allows 3 attempts. After that, the payment fails.</li>
+        <li>Challenges are single-use. A completed or closed challenge cannot be reused (<code>409</code>).</li>
+        <li>An order is only captured through <code>POST /3ds-complete</code> with a valid, pending challenge for that order and the correct code. Requests without a challenge are rejected (<code>400</code>).</li>
+      </ul>
     </section>
 
     <section id="auth" class="block">
