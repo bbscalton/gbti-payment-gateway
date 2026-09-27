@@ -1,10 +1,8 @@
-package com.gbti.paymentgateway.ui
+package com.neuereatec.sapp.ui
 
-import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.webkit.WebResourceRequest
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.content.Context
+import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,7 +22,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CreditCard
@@ -52,34 +49,47 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.gbti.paymentgateway.data.CatalogItem
-import com.gbti.paymentgateway.data.Order
-import com.gbti.paymentgateway.data.formatGyd
-import com.gbti.paymentgateway.ui.theme.GbtiCream
-import com.gbti.paymentgateway.ui.theme.GbtiError
-import com.gbti.paymentgateway.ui.theme.GbtiGold
-import com.gbti.paymentgateway.ui.theme.GbtiMuted
-import com.gbti.paymentgateway.ui.theme.GbtiNavy
-import com.gbti.paymentgateway.ui.theme.GbtiNavyDeep
-import com.gbti.paymentgateway.ui.theme.GbtiSuccess
-import com.gbti.paymentgateway.ui.theme.GbtiTeal
+import com.neuereatec.sapp.data.CatalogItem
+import com.neuereatec.sapp.data.Order
+import com.neuereatec.sapp.data.formatGyd
+import com.neuereatec.sapp.ui.theme.SappAccent
+import com.neuereatec.sapp.ui.theme.SappCream
+import com.neuereatec.sapp.ui.theme.SappError
+import com.neuereatec.sapp.ui.theme.SappMuted
+import com.neuereatec.sapp.ui.theme.SappPrimary
+import com.neuereatec.sapp.ui.theme.SappPrimaryDeep
+import com.neuereatec.sapp.ui.theme.SappSuccess
+import com.neuereatec.sapp.ui.theme.SappTeal
+
+/**
+ * Opens checkout URL in Chrome Custom Tabs instead of WebView for security.
+ * This ensures the card entry form runs in the system browser, which:
+ * - Prevents the host app from injecting scripts
+ * - Shows the user a trusted browser UI with URL bar
+ * - Satisfies bank/acquirer security requirements
+ */
+fun openCheckoutInCustomTab(context: Context, url: String) {
+    val customTabsIntent = CustomTabsIntent.Builder()
+        .setShowTitle(true)
+        .build()
+    customTabsIntent.launchUrl(context, Uri.parse(url))
+}
 
 @Composable
-fun GbtiPaymentApp(vm: CheckoutViewModel = viewModel()) {
+fun SappApp(vm: CheckoutViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     when {
         state.checkoutUrl != null -> {
-            HostedCheckoutScreen(
-                url = state.checkoutUrl!!,
-                onClose = { vm.clearCheckoutSession() },
-            )
+            openCheckoutInCustomTab(context, state.checkoutUrl!!)
+            vm.clearCheckoutSession()
         }
         state.order != null -> {
             ReceiptScreen(
@@ -119,23 +129,23 @@ private fun ShopScreen(
                 title = {
                     Column {
                         Text(
-                            "GBTI Bank",
+                            "Sapp",
                             style = MaterialTheme.typography.titleLarge,
                             color = Color.White,
                         )
                         Text(
                             "Merchant checkout · Guyana dollars",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = GbtiGold,
+                            color = SappAccent,
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = GbtiNavyDeep,
+                    containerColor = SappPrimaryDeep,
                 ),
             )
         },
-        containerColor = GbtiCream,
+        containerColor = SappCream,
     ) { padding ->
         Column(
             Modifier
@@ -152,12 +162,12 @@ private fun ShopScreen(
                     Text(
                         "Select an item",
                         style = MaterialTheme.typography.titleMedium,
-                        color = GbtiNavy,
+                        color = SappPrimary,
                     )
                     Text(
-                        "Card details are entered only on GBTI hosted checkout — never in this app.",
+                        "Card details entered securely in browser — never in this app.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = GbtiMuted,
+                        color = SappMuted,
                         modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
                     )
                 }
@@ -192,7 +202,7 @@ private fun HeroBanner() {
         Modifier
             .fillMaxWidth()
             .background(
-                Brush.horizontalGradient(listOf(GbtiNavyDeep, GbtiTeal)),
+                Brush.horizontalGradient(listOf(SappPrimaryDeep, SappTeal)),
             )
             .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
@@ -200,7 +210,7 @@ private fun HeroBanner() {
             Icon(
                 Icons.Default.Security,
                 contentDescription = null,
-                tint = GbtiGold,
+                tint = SappAccent,
                 modifier = Modifier.size(28.dp),
             )
             Spacer(Modifier.width(12.dp))
@@ -208,10 +218,10 @@ private fun HeroBanner() {
                 Text(
                     "SANDBOX DEMO",
                     style = MaterialTheme.typography.labelLarge,
-                    color = GbtiGold,
+                    color = SappAccent,
                 )
                 Text(
-                    "Visa / Mastercard · GYD · Hosted card fields",
+                    "Visa / Mastercard · GYD · Secure browser checkout",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.9f),
                 )
@@ -234,7 +244,7 @@ private fun CatalogRow(
             .background(if (selected) Color.White else Color.White.copy(alpha = 0.7f))
             .border(
                 width = if (selected) 2.dp else 1.dp,
-                color = if (selected) GbtiGold else Color(0xFFD9D2C3),
+                color = if (selected) SappAccent else Color(0xFFE2E8F0),
                 shape = shape,
             )
             .clickable(onClick = onClick)
@@ -242,13 +252,13 @@ private fun CatalogRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(item.name, style = MaterialTheme.typography.titleMedium, color = GbtiNavy)
-            Text(item.description, style = MaterialTheme.typography.bodyMedium, color = GbtiMuted)
+            Text(item.name, style = MaterialTheme.typography.titleMedium, color = SappPrimary)
+            Text(item.description, style = MaterialTheme.typography.bodyMedium, color = SappMuted)
         }
         Text(
             formatGyd(item.amountCents),
             style = MaterialTheme.typography.titleMedium,
-            color = GbtiNavyDeep,
+            color = SappPrimaryDeep,
             fontWeight = FontWeight.Bold,
         )
     }
@@ -261,7 +271,7 @@ private fun QuantityRow(qty: Int, onQty: (Int) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text("Quantity", style = MaterialTheme.typography.titleMedium, color = GbtiNavy)
+        Text("Quantity", style = MaterialTheme.typography.titleMedium, color = SappPrimary)
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = { onQty(qty - 1) }) {
                 Icon(Icons.Default.Remove, contentDescription = "Decrease")
@@ -292,13 +302,13 @@ private fun CheckoutBar(
         Modifier
             .fillMaxWidth()
             .background(Color.White)
-            .border(width = 1.dp, color = Color(0xFFD9D2C3))
+            .border(width = 1.dp, color = Color(0xFFE2E8F0))
             .padding(16.dp),
     ) {
         if (error != null) {
             Text(
                 error,
-                color = GbtiError,
+                color = SappError,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -312,14 +322,14 @@ private fun CheckoutBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
-                Text("Total", style = MaterialTheme.typography.bodyMedium, color = GbtiMuted)
-                Text(totalLabel, style = MaterialTheme.typography.headlineMedium, color = GbtiNavy)
+                Text("Total", style = MaterialTheme.typography.bodyMedium, color = SappMuted)
+                Text(totalLabel, style = MaterialTheme.typography.headlineMedium, color = SappPrimary)
             }
             Button(
                 onClick = onPay,
                 enabled = enabled,
-                colors = ButtonDefaults.buttonColors(containerColor = GbtiNavy),
-                shape = RoundedCornerShape(3.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = SappAccent),
+                shape = RoundedCornerShape(4.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
             ) {
                 if (loading) {
@@ -339,66 +349,6 @@ private fun CheckoutBar(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("SetJavaScriptEnabled")
-@Composable
-private fun HostedCheckoutScreen(url: String, onClose: () -> Unit) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text("Secure checkout", color = Color.White)
-                        Text(
-                            "Hosted by GBTI sandbox",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = GbtiGold,
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onClose) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Close",
-                            tint = Color.White,
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = GbtiNavyDeep),
-            )
-        },
-    ) { padding ->
-        AndroidView(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            factory = { context ->
-                WebView(context).apply {
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled = true
-                    webViewClient = object : WebViewClient() {
-                        override fun shouldOverrideUrlLoading(
-                            view: WebView?,
-                            request: WebResourceRequest?,
-                        ): Boolean = false
-
-                        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                            super.onPageStarted(view, url, favicon)
-                        }
-                    }
-                    loadUrl(url)
-                }
-            },
-            update = { webView ->
-                if (webView.url != url) {
-                    webView.loadUrl(url)
-                }
-            },
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ReceiptScreen(
     order: Order,
@@ -407,20 +357,20 @@ private fun ReceiptScreen(
     onRefresh: () -> Unit,
 ) {
     val (icon, tint, title) = when (order.status) {
-        "paid" -> Triple(Icons.Default.CheckCircle, GbtiSuccess, "Payment confirmed")
-        "failed" -> Triple(Icons.Default.Error, GbtiError, "Payment failed")
-        "refunded" -> Triple(Icons.Default.CheckCircle, GbtiTeal, "Refunded")
-        else -> Triple(Icons.Default.HourglassEmpty, GbtiGold, "Pending confirmation")
+        "paid", "captured" -> Triple(Icons.Default.CheckCircle, SappSuccess, "Payment confirmed")
+        "failed" -> Triple(Icons.Default.Error, SappError, "Payment failed")
+        "refunded" -> Triple(Icons.Default.CheckCircle, SappTeal, "Refunded")
+        else -> Triple(Icons.Default.HourglassEmpty, SappAccent, "Pending confirmation")
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Receipt", color = Color.White) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = GbtiNavyDeep),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SappPrimaryDeep),
             )
         },
-        containerColor = GbtiCream,
+        containerColor = SappCream,
     ) { padding ->
         Column(
             Modifier
@@ -432,20 +382,20 @@ private fun ReceiptScreen(
             Spacer(Modifier.height(24.dp))
             Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(64.dp))
             Spacer(Modifier.height(12.dp))
-            Text(title, style = MaterialTheme.typography.headlineMedium, color = GbtiNavy)
+            Text(title, style = MaterialTheme.typography.headlineMedium, color = SappPrimary)
             if (!pollMessage.isNullOrBlank() && order.status == "pending") {
                 Text(
                     pollMessage,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = GbtiGold,
+                    color = SappAccent,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 6.dp),
                 )
             }
             Text(
-                "Status from verified webhook — not client-side trust",
+                "Status confirmed via signed webhook",
                 style = MaterialTheme.typography.bodyMedium,
-                color = GbtiMuted,
+                color = SappMuted,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 6.dp),
             )
@@ -454,11 +404,11 @@ private fun ReceiptScreen(
                 Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .border(1.dp, Color(0xFFD9D2C3), RoundedCornerShape(4.dp))
+                    .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(4.dp))
                     .padding(18.dp),
             ) {
-                ReceiptLine("Merchant", "GBTI Demo Merchant")
-                HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color(0xFFE8E1D4))
+                ReceiptLine("Merchant", "Demo Merchant")
+                HorizontalDivider(Modifier.padding(vertical = 10.dp), color = Color(0xFFE2E8F0))
                 ReceiptLine("Amount", formatGyd(order.amountCents))
                 ReceiptLine("Currency", order.currency)
                 ReceiptLine("Status", order.status.uppercase())
@@ -472,8 +422,8 @@ private fun ReceiptScreen(
             Button(
                 onClick = onShopAgain,
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = GbtiNavy),
-                shape = RoundedCornerShape(3.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = SappAccent),
+                shape = RoundedCornerShape(4.dp),
             ) {
                 Text("Shop again")
             }
@@ -492,11 +442,11 @@ private fun ReceiptLine(label: String, value: String) {
             .padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = GbtiMuted)
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = SappMuted)
         Text(
             value,
             style = MaterialTheme.typography.bodyLarge,
-            color = GbtiNavyDeep,
+            color = SappPrimaryDeep,
             fontWeight = FontWeight.Medium,
             textAlign = TextAlign.End,
             modifier = Modifier

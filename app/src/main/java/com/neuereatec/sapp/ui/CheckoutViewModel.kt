@@ -1,14 +1,14 @@
-package com.gbti.paymentgateway.ui
+package com.neuereatec.sapp.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.gbti.paymentgateway.BuildConfig
-import com.gbti.paymentgateway.data.CatalogItem
-import com.gbti.paymentgateway.data.CreateOrderRequest
-import com.gbti.paymentgateway.data.DemoCatalog
-import com.gbti.paymentgateway.data.Order
-import com.gbti.paymentgateway.data.OrderStatusRepository
-import com.gbti.paymentgateway.network.ApiClient
+import com.neuereatec.sapp.BuildConfig
+import com.neuereatec.sapp.data.CatalogItem
+import com.neuereatec.sapp.data.CreateOrderRequest
+import com.neuereatec.sapp.data.DemoCatalog
+import com.neuereatec.sapp.data.Order
+import com.neuereatec.sapp.data.OrderStatusRepository
+import com.neuereatec.sapp.network.ApiClient
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,7 +50,6 @@ class CheckoutViewModel : ViewModel() {
     }
 
     fun clearCheckoutSession() {
-        // Keep polling / Firestore — webhook may still complete after user leaves WebView
         _state.update {
             it.copy(
                 checkoutUrl = null,
@@ -71,7 +70,6 @@ class CheckoutViewModel : ViewModel() {
         }
     }
 
-    /** Create order on backend, then obtain hosted checkout URL. Never sends card data. */
     fun startCardPayment() {
         val item = _state.value.selected ?: return
         val qty = _state.value.quantity
@@ -94,7 +92,7 @@ class CheckoutViewModel : ViewModel() {
                         isLoading = false,
                         order = order,
                         checkoutUrl = pay.checkoutUrl,
-                        pollMessage = "Awaiting secure checkout…",
+                        pollMessage = "Opening secure checkout…",
                     )
                 }
                 startStatusWatch(order.id)
@@ -102,18 +100,13 @@ class CheckoutViewModel : ViewModel() {
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        error = e.message
-                            ?: "Could not reach GBTI sandbox. Check API_BASE_URL / Worker.",
+                        error = e.message ?: "Could not reach gateway. Check network connection.",
                     )
                 }
             }
         }
     }
 
-    /**
-     * Prefer Firestore realtime mirror when cloud flavor is on; always poll Worker API as fallback.
-     * Paid/failed is authoritative only after backend webhook verification.
-     */
     private fun startStatusWatch(orderId: String) {
         startPolling(orderId)
         if (BuildConfig.USE_FIRESTORE_STATUS) {
@@ -133,17 +126,18 @@ class CheckoutViewModel : ViewModel() {
                 order = order,
                 pollMessage = when (order.status) {
                     "pending" -> if (fromFirestore) {
-                        "Waiting for bank confirmation (Firestore)…"
+                        "Waiting for confirmation (Firestore)…"
                     } else {
-                        "Waiting for bank confirmation…"
+                        "Waiting for confirmation…"
                     }
-                    "paid" -> "Payment confirmed by GBTI webhook"
+                    "paid", "captured" -> "Payment confirmed"
                     "failed" -> "Payment declined"
                     else -> order.status
                 },
             )
         }
-        if (order.status == "paid" || order.status == "failed" || order.status == "refunded") {
+        if (order.status == "paid" || order.status == "captured" || 
+            order.status == "failed" || order.status == "refunded") {
             _state.update { it.copy(checkoutUrl = null) }
             pollJob?.cancel()
         }
@@ -159,11 +153,12 @@ class CheckoutViewModel : ViewModel() {
                 try {
                     val order = ApiClient.api.getOrder(orderId)
                     applyOrderUpdate(order, fromFirestore = false)
-                    if (order.status == "paid" || order.status == "failed" || order.status == "refunded") {
+                    if (order.status == "paid" || order.status == "captured" || 
+                        order.status == "failed" || order.status == "refunded") {
                         break
                     }
                 } catch (_: Exception) {
-                    // Keep polling; transient network blips during WebView checkout
+                    // Keep polling; transient network issues during checkout
                 }
             }
         }

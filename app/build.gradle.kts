@@ -6,17 +6,16 @@ plugins {
 }
 
 android {
-    namespace = "com.gbti.paymentgateway"
+    namespace = "com.neuereatec.sapp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.gbti.paymentgateway"
+        applicationId = "com.neuereatec.sapp"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "2.0.0"
 
-        // Debug default: emulator → local Express or wrangler dev on host
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:3000/\"")
         buildConfigField("boolean", "USE_FIRESTORE_STATUS", "false")
 
@@ -32,11 +31,10 @@ android {
         }
         create("cloud") {
             dimension = "env"
-            // Cloudflare Worker (HTTPS) — update if your workers.dev subdomain changes
             buildConfigField(
                 "String",
                 "API_BASE_URL",
-                "\"https://gbti-payment-gateway.neuereatec.workers.dev/\"",
+                "\"https://sapp-gateway.neuereatec.workers.dev/\"",
             )
             buildConfigField("boolean", "USE_FIRESTORE_STATUS", "true")
         }
@@ -44,7 +42,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -87,6 +85,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.navigation:navigation-compose:2.8.4")
+    
+    // Chrome Custom Tabs for secure checkout
+    implementation("androidx.browser:browser:1.8.0")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")

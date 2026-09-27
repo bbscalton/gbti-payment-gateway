@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "gbti-payment-gateway",
+  "name": "sapp-gateway",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-25",
   "compatibility_flags": ["nodejs_compat"],
@@ -12,7 +12,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "gbti-payment-orders",
+      "database_name": "sapp-gateway-orders",
       "database_id": "584055b9-e6e3-450e-a192-a2d25b09f762",
       "migrations_dir": "migrations"
     }
@@ -25,10 +25,12 @@
     }
   ],
   "vars": {
-    "PUBLIC_BASE_URL": ""
+    "PUBLIC_BASE_URL": "",
+    "ALLOWED_ORIGINS": ""
   }
   // Secrets (wrangler secret put — never commit):
-  //   WEBHOOK_SECRET
+  //   WEBHOOK_SECRET (REQUIRED - no default)
+  //   MERCHANT_MASTER_KEY (for hashing API keys)
   //   FIREBASE_PROJECT_ID
   //   FIREBASE_CLIENT_EMAIL
   //   FIREBASE_PRIVATE_KEY

@@ -1,180 +1,237 @@
-# GBTI Bank — Sandbox Payment Gateway
+# Sapp — Payment Gateway
 
-Demo merchant checkout for **Guyana dollars (GYD)** with Visa/Mastercard via a **hosted mock checkout**. Branded for GBTI Bank (sandbox only).
+A secure, multi-tenant payment gateway for **Guyana dollars (GYD)** card payments. Built with Cloudflare Workers, D1, and Hono.
 
-**Website:** [How to use the app, API, and build the APK](https://bbscalton.github.io/gbti-payment-gateway/)  
-Also mirrored from the Worker at [`/docs`](https://gbti-payment-gateway.neuereatec.workers.dev/docs).
+**Sapp by Neuereatec Enterprise (Guyana)**
 
-> **Not production.** Mock/sandbox only. Never store PAN/CVV/expiry in the app, GitHub, KV, or Firestore.
+> **SANDBOX MODE** — This gateway is currently in test/development mode. No real payments are processed. For production deployment, the gateway is designed to integrate with an acquiring bank (planned: GBTI Bank, pending partnership agreement). There is no affiliation with or endorsement by any bank at this time.
 
-## Three-piece architecture
+## Features
+
+- **Multi-tenant merchant accounts** with API key authentication
+- **Hosted checkout page** — card data never touches merchant servers
+- **Payment state machine** — authorize, capture, void, refund (full/partial)
+- **Signed webhooks** with replay protection and retry delivery
+- **Double-entry ledger** with settlement reports
+- **Dispute/chargeback** management (mock)
+- **3-D Secure** simulation for testing
+- **Audit logging** for compliance
+- **Rate limiting** and CORS protection
+
+## Architecture
 
 ```
-Android (Compose)
-   │  HTTPS API
+Merchant App/Website
+   │  HTTPS API (Bearer token)
    ▼
-Cloudflare Worker (Hono) ──► Workers D1 (orders)
+Cloudflare Worker (Hono) ──► Workers D1 (orders, merchants, ledger)
    │                              │
-   │ HMAC webhook (paid/failed)   │ mirror (no card data)
+   │ Signed webhooks              │ mirror (no card data)
    ▼                              ▼
-Hosted checkout HTML         Firebase Firestore
-                             (orders/{id} status)
+Merchant webhook endpoint    Firebase Firestore (optional)
 ```
 
-| Piece | Role |
-|-------|------|
-| **GitHub** | Source of truth + Actions deploy Worker on push to `main` |
-| **Cloudflare Workers** | Public HTTPS API, hosted checkout, mock processor, HMAC webhooks, **D1** order store |
-| **Firebase Firestore** | Optional realtime order-status mirror for the Android receipt screen |
+| Component | Role |
+|-----------|------|
+| **Cloudflare Workers** | API, hosted checkout, webhook delivery |
+| **D1** | Orders, merchants, ledger, audit logs |
+| **Firebase Firestore** | Optional real-time order status mirror |
+| **GitHub Actions** | CI/CD deployment |
 
-### Security rules enforced
+## Security
 
-- Android and merchant APIs **never** collect, transmit, or store raw card numbers, expiry, or CVV.
-- Card entry happens only on the **hosted checkout** page → **mock processor**.
-- Orders become `paid` **only** after an **HMAC-signed webhook** is verified.
-- Firestore stores only: `id`, `amountCents`, `currency`, `status`, `paymentRef`, `description`, timestamps.
+- **Card data isolation**: PAN/CVV/expiry entered only on hosted checkout, never stored
+- **API authentication**: Per-merchant secret keys (sk_test_/sk_live_) with HMAC hashing
+- **Webhook signatures**: Timestamped HMAC-SHA256 with replay protection
+- **Security headers**: CSP, HSTS, X-Frame-Options, Referrer-Policy
+- **Rate limiting**: Per-IP and per-merchant request limits
+- **Audit trail**: All sensitive actions logged
 
-## Live endpoints (this deployment)
+## Quick Start
 
-| Resource | Value |
-|----------|-------|
-| Docs site | https://bbscalton.github.io/gbti-payment-gateway/ |
-| Worker | `https://gbti-payment-gateway.neuereatec.workers.dev` |
-| Worker docs redirect | `GET /docs` |
-| Firebase project | `gbti-payment-gateway` |
-| Health | `GET /health` |
-| APK releases | https://github.com/bbscalton/gbti-payment-gateway/releases |
-
-## Prerequisites
-
-- Android Studio Hedgehog+ (SDK 34/35), JDK 17+
-- Node.js 18+ (optional local Express / Worker)
-- Cloudflare account (Wrangler logged in) for Worker deploy
-- Firebase CLI / Google account for Firestore
-- `gh` CLI for GitHub
-
-## Run options
-
-### A) Cloud stack (recommended demo)
-
-1. Worker is already deployed (or `cd workers && npm ci --legacy-peer-deps && npx wrangler deploy`).
-2. In Android Studio, select the **`cloudDebug`** variant (product flavor `cloud`).
-3. Ensure `app/google-services.json` exists (download via Firebase CLI; not committed — see example file).
-4. Run on emulator or device. App talks to the Worker over HTTPS and listens to Firestore for status.
-
-### Build the APK (Windows)
-
-```bat
-cd C:\Users\Administrator\AndroidStudioProjects\Paymentgateway
-.\gradlew.bat assembleCloudDebug
-```
-
-APK output: `app\build\outputs\apk\cloud\debug\app-cloud-debug.apk`
-
-Or in Android Studio: **Build → Generate Signed Bundle / APK** (or Build APK) with the `cloud` flavor. Prefer publishing via [GitHub Releases](https://github.com/bbscalton/gbti-payment-gateway/releases) instead of committing binaries.
-
-```bash
-# Refresh google-services.json locally (do not commit)
-npx -y firebase-tools@latest apps:sdkconfig ANDROID \
-  1:1036768290031:android:858b2df3b28d3f8baca71a \
-  --project gbti-payment-gateway -o app/google-services.json
-```
-
-### B) Local backend (Express)
-
-```bash
-cd backend
-npm install
-npm start
-```
-
-Use Android flavor **`localDebug`**. Emulator reaches host via `10.0.2.2:3000`.
-
-### C) Local Worker
+### 1. Deploy the Worker
 
 ```bash
 cd workers
-cp .dev.vars.example .dev.vars
 npm install --legacy-peer-deps
-npm run dev
-```
-
-Point `local` flavor / `PUBLIC_BASE_URL` at the wrangler tunnel URL or `http://10.0.2.2:8787`.
-
-## Test cards (sandbox only)
-
-| Card number | Result |
-|-------------|--------|
-| `4111 1111 1111 1111` | Success → webhook `paid` |
-| `4000 0000 0000 0002` | Decline → webhook `failed` |
-
-Any future expiry + 3-digit CVV (e.g. `12` / `28` / `123`).
-
-## API summary
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/orders` | Create order `{ amountCents, currency: "GYD", description }` |
-| `GET` | `/orders/:id` | Fetch order |
-| `POST` | `/orders/:id/pay` | Returns `{ checkoutUrl }` |
-| `GET` | `/checkout/:id` | Hosted card form (HTML) |
-| `POST` | `/mock-processor/charge` | Mock acquirer (card fields; not persisted) |
-| `POST` | `/webhooks/payment` | HMAC webhook; updates status |
-| `POST` | `/orders/:id/refund` | Refund stub |
-
-## Secrets & authorize / redeploy
-
-### Cloudflare
-
-```bash
-cd workers
-npx wrangler login          # if needed — opens browser OAuth
-npx wrangler secret put WEBHOOK_SECRET
-npx wrangler secret put FIREBASE_PROJECT_ID
-npx wrangler secret put FIREBASE_CLIENT_EMAIL
-npx wrangler secret put FIREBASE_PRIVATE_KEY   # PEM from service account JSON
 npx wrangler deploy
 ```
 
-### GitHub Actions deploy
-
-Repo secrets required:
-
-- `CLOUDFLARE_API_TOKEN` — Workers edit permission
-- `CLOUDFLARE_ACCOUNT_ID` — `2aba2de5418ac0812383b628b6cb0f77` (this account)
-
-Workflow: `.github/workflows/deploy-worker.yml` deploys `workers/` on push to `main`.
-
-### Firebase
+### 2. Set Required Secrets
 
 ```bash
-npx -y firebase-tools@latest login
-npx -y firebase-tools@latest use gbti-payment-gateway
-npx -y firebase-tools@latest deploy --only firestore
+npx wrangler secret put WEBHOOK_SECRET
+npx wrangler secret put MERCHANT_MASTER_KEY
+# Optional: Firebase mirror
+npx wrangler secret put FIREBASE_PROJECT_ID
+npx wrangler secret put FIREBASE_CLIENT_EMAIL
+npx wrangler secret put FIREBASE_PRIVATE_KEY
 ```
 
-Console: https://console.firebase.google.com/project/gbti-payment-gateway/overview
+### 3. Create a Merchant Account
 
-Firestore rules: clients may **read** `orders/{id}`; writes only via Admin / Worker service account.
+```bash
+curl -X POST https://sapp-gateway.neuereatec.workers.dev/v1/merchants \
+  -H "Content-Type: application/json" \
+  -d '{"name": "My Store", "email": "merchant@example.com"}'
+```
 
-### Firebase MCP (Cursor)
+Save the `testApiKey` and `liveApiKey` returned — they won't be shown again.
 
-If the Firebase MCP shows `needsAuth`, complete OAuth when prompted. CLI is already sufficient for this project (`neuereatec@gmail.com`).
+### 4. Create an Order
 
-## Key paths
+```bash
+curl -X POST https://sapp-gateway.neuereatec.workers.dev/v1/orders \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Idempotency-Key: unique-request-id" \
+  -d '{"amountCents": 150000, "currency": "GYD", "description": "Demo order"}'
+```
 
-| Path | Role |
-|------|------|
-| `workers/` | Cloudflare Worker (Hono) + D1 + Firestore mirror |
-| `backend/` | Legacy local Express (same routes) |
-| `app/` | Kotlin Compose merchant app |
-| `firestore.rules` | Demo read-by-id rules |
-| `.github/workflows/deploy-worker.yml` | Deploy on push |
+### 5. Get Checkout URL
 
-## PCI / production note
+```bash
+curl -X POST https://sapp-gateway.neuereatec.workers.dev/v1/orders/ORDER_ID/pay \
+  -H "Authorization: Bearer sk_test_..."
+```
 
-Replace mock processor, secrets, and webhook scheme with real GBTI/acquirer credentials and PCI-scoped hosting before any live traffic.
+Redirect the customer to the `checkoutUrl` returned.
+
+## Test Cards
+
+| Card Number | Result |
+|-------------|--------|
+| `4111 1111 1111 1111` | Success (captured) |
+| `4000 0000 0000 0002` | Declined |
+| `4000 0000 0000 0010` | Insufficient funds |
+| `4000 0000 0000 0028` | Expired card |
+| `4000 0000 0000 3220` | 3DS challenge required |
+| `5555 5555 5555 4444` | Success (Mastercard) |
+
+**Important:** Only documented test cards are accepted. All other card numbers (even valid Luhn) are declined with `use_test_card` error.
+
+## API Reference
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/v1/merchants` | Create merchant account |
+| `GET` | `/v1/merchants/me` | Get current merchant info |
+| `POST` | `/v1/orders` | Create order |
+| `GET` | `/v1/orders` | List merchant's orders |
+| `GET` | `/v1/orders/:id` | Get order details |
+| `POST` | `/v1/orders/:id/pay` | Get checkout URL |
+| `POST` | `/v1/orders/:id/capture` | Capture authorized payment |
+| `POST` | `/v1/orders/:id/refund` | Refund captured payment |
+| `POST` | `/v1/orders/:id/void` | Void authorization |
+| `GET` | `/v1/webhooks/events` | List webhook events |
+| `GET` | `/v1/ledger` | Get ledger entries |
+| `GET` | `/v1/settlements` | List settlement reports |
+| `GET` | `/v1/disputes` | List disputes |
+| `GET` | `/v1/test-cards` | List test card numbers |
+
+### Authentication
+
+Include your API key in the Authorization header:
+
+```
+Authorization: Bearer sk_test_xxxx
+```
+
+Test keys (`sk_test_`) work in sandbox mode. Live keys (`sk_live_`) are for production.
+
+### Idempotency
+
+Include an `Idempotency-Key` header on POST requests to prevent duplicate operations:
+
+```
+Idempotency-Key: unique-request-identifier
+```
+
+Keys are valid for 24 hours.
+
+### Webhook Signature Verification
+
+Webhooks are signed with your merchant's webhook secret:
+
+```
+X-Sapp-Signature: t=1234567890,v1=abc123...
+```
+
+Verify using:
+
+```javascript
+const crypto = require('crypto');
+
+function verifySignature(payload, signature, secret) {
+  const [tPart, v1Part] = signature.split(',');
+  const timestamp = tPart.split('=')[1];
+  const expectedSig = v1Part.split('=')[1];
+  
+  // Check timestamp within 5 minutes
+  const age = Math.floor(Date.now() / 1000) - parseInt(timestamp);
+  if (age > 300) return false;
+  
+  const signedPayload = `${timestamp}.${payload}`;
+  const computed = crypto
+    .createHmac('sha256', secret)
+    .update(signedPayload)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(Buffer.from(computed), Buffer.from(expectedSig));
+}
+```
+
+## Android App
+
+The Android app package is `com.neuereatec.sapp`.
+
+To build:
+
+```bash
+cd app
+./gradlew assembleCloudDebug
+```
+
+**Note:** The app opens the checkout in Chrome Custom Tabs (not WebView) for security.
+
+## Running Tests
+
+```bash
+cd workers
+npm test
+```
+
+## Manual Steps Required (Owner)
+
+After merging this PR, you must:
+
+1. **Rename GitHub repository** from `gbti-payment-gateway` to `sapp-gateway`
+2. **Delete the v1.0.0-cloud-debug release** and the "GBTI Pay" APK
+3. **Create a new Firebase project** named `sapp-gateway` (project IDs cannot be renamed)
+4. **Update GitHub Actions secrets** for the new Worker name
+5. **Update the Worker URL** in any integrations
+6. **Renew business registration** B35276 before approaching banks
+
+## Go Live Checklist
+
+Before processing real payments:
+
+1. [ ] Partnership agreement with acquiring bank
+2. [ ] Production MID and credentials from bank
+3. [ ] Replace mock processor with bank's hosted checkout/API
+4. [ ] PCI DSS compliance (SAQ or QSA assessment)
+5. [ ] BoG PSP license (if operating as payment facilitator)
+6. [ ] SSL certificate for custom domain
+7. [ ] Production Firebase project
+8. [ ] Rate limits tuned for expected volume
+9. [ ] Monitoring and alerting configured
+10. [ ] Incident response plan documented
 
 ## License
 
-Demo / educational sandbox. Not affiliated with live GBTI production systems.
+Proprietary — All rights reserved.
+Sapp by Neuereatec Enterprise (Guyana)
+
+See [LICENSE](LICENSE) for details.

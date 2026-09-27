@@ -1,6 +1,6 @@
-package com.gbti.paymentgateway.data
+package com.neuereatec.sapp.data
 
-import com.gbti.paymentgateway.BuildConfig
+import com.neuereatec.sapp.BuildConfig
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.channels.awaitClose
@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOf
 
 /**
- * Optional Firestore mirror of order status (id, amountCents, currency, status, paymentRef, createdAt).
+ * Optional Firestore mirror of order status.
  * NEVER stores PAN / CVV / expiry. Enabled for cloud flavor only.
  */
 object OrderStatusRepository {

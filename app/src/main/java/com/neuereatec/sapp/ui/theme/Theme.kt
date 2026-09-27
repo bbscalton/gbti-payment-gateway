@@ -1,4 +1,4 @@
-package com.gbti.paymentgateway.ui.theme
+package com.neuereatec.sapp.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
@@ -9,29 +9,29 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-val GbtiNavy = Color(0xFF0B3D5C)
-val GbtiNavyDeep = Color(0xFF072A40)
-val GbtiTeal = Color(0xFF1A5F7A)
-val GbtiGold = Color(0xFFC9A227)
-val GbtiCream = Color(0xFFF7F5F0)
-val GbtiMuted = Color(0xFF5A6B75)
-val GbtiSuccess = Color(0xFF1F6F4A)
-val GbtiError = Color(0xFF9B2C2C)
+val SappPrimary = Color(0xFF1A365D)
+val SappPrimaryDeep = Color(0xFF0F2744)
+val SappTeal = Color(0xFF0D9488)
+val SappAccent = Color(0xFF38A169)
+val SappCream = Color(0xFFF7FAFC)
+val SappMuted = Color(0xFF718096)
+val SappSuccess = Color(0xFF38A169)
+val SappError = Color(0xFFC53030)
 
 private val LightColors = lightColorScheme(
-    primary = GbtiNavy,
+    primary = SappPrimary,
     onPrimary = Color.White,
-    primaryContainer = GbtiTeal,
+    primaryContainer = SappTeal,
     onPrimaryContainer = Color.White,
-    secondary = GbtiGold,
-    onSecondary = GbtiNavyDeep,
-    background = GbtiCream,
-    onBackground = GbtiNavyDeep,
+    secondary = SappAccent,
+    onSecondary = Color.White,
+    background = SappCream,
+    onBackground = SappPrimaryDeep,
     surface = Color.White,
-    onSurface = GbtiNavyDeep,
-    surfaceVariant = Color(0xFFECE7DB),
-    onSurfaceVariant = GbtiMuted,
-    error = GbtiError,
+    onSurface = SappPrimaryDeep,
+    surfaceVariant = Color(0xFFEDF2F7),
+    onSurfaceVariant = SappMuted,
+    error = SappError,
     onError = Color.White,
 )
 
@@ -76,7 +76,7 @@ private val Typography = androidx.compose.material3.Typography(
 )
 
 @Composable
-fun GbtiTheme(content: @Composable () -> Unit) {
+fun SappTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = LightColors,
         typography = Typography,

@@ -1,14 +1,14 @@
 :root {
-  --navy-deep: #041824;
-  --navy: #0b3d5c;
-  --teal: #1a5f7a;
-  --teal-bright: #2a8a9e;
-  --gold: #d4b24a;
-  --gold-soft: rgba(212, 178, 74, 0.35);
+  --navy-deep: #0f172a;
+  --navy: #1e3a5f;
+  --teal: #0d9488;
+  --teal-bright: #14b8a6;
+  --accent: #38a169;
+  --accent-soft: rgba(56, 161, 105, 0.35);
   --ink: #e8eef2;
   --muted: #9bb0bc;
   --line: rgba(232, 238, 242, 0.12);
-  --surface: rgba(7, 42, 64, 0.55);
+  --surface: rgba(15, 23, 42, 0.55);
   --font-display: "Instrument Serif", Georgia, serif;
   --font-body: "DM Sans", system-ui, sans-serif;
 }
@@ -64,7 +64,7 @@ body {
   height: 36vw;
   right: -8%;
   top: 18%;
-  background: rgba(201, 162, 39, 0.45);
+  background: rgba(56, 161, 105, 0.45);
   animation-delay: -6s;
 }
 
@@ -77,10 +77,10 @@ body {
   background: linear-gradient(
     90deg,
     transparent,
-    var(--gold-soft),
+    var(--accent-soft),
     transparent
   );
-  box-shadow: 0 0 40px 8px rgba(212, 178, 74, 0.12);
+  box-shadow: 0 0 40px 8px rgba(56, 161, 105, 0.12);
 }
 
 .grain {
@@ -113,8 +113,8 @@ body {
 .mark {
   font-family: var(--font-display);
   font-size: 1.5rem;
-  letter-spacing: 0.08em;
-  color: var(--gold);
+  letter-spacing: 0.04em;
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -176,7 +176,7 @@ main {
   font-family: var(--font-display);
   font-size: clamp(1.6rem, 4vw, 2.35rem);
   font-style: italic;
-  color: var(--gold);
+  color: var(--accent);
 }
 
 .lede {
@@ -209,8 +209,8 @@ main {
 }
 
 .btn.primary {
-  background: var(--gold);
-  color: var(--navy-deep);
+  background: var(--accent);
+  color: #fff;
 }
 
 .btn.ghost {
@@ -220,7 +220,7 @@ main {
 }
 
 .btn.ghost:hover {
-  border-color: var(--gold-soft);
+  border-color: var(--accent-soft);
 }
 
 .block {
@@ -244,7 +244,7 @@ main {
   font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--gold);
+  color: var(--accent);
 }
 
 .section-lede {
@@ -283,7 +283,7 @@ main {
 }
 
 .steps strong {
-  color: var(--gold);
+  color: var(--accent);
 }
 
 .flow {
@@ -317,8 +317,8 @@ main {
   justify-content: center;
   border-radius: 50%;
   background: var(--navy);
-  border: 1px solid var(--gold-soft);
-  color: var(--gold);
+  border: 1px solid var(--accent-soft);
+  color: var(--accent);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -391,7 +391,7 @@ pre {
   padding: 1rem 1.1rem;
   overflow-x: auto;
   background: var(--surface);
-  border-left: 2px solid var(--gold);
+  border-left: 2px solid var(--accent);
   color: #d7e4eb;
   font-size: 0.86rem;
   line-height: 1.5;
