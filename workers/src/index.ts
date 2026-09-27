@@ -962,7 +962,9 @@ app.post("/v1/webhooks/events/:id/redeliver", async (c) => {
     return c.json(createError("authentication_required"), 401);
   }
 
-  const event = await redeliverWebhook(c.env, c.req.param("id"));
+  // Ownership-scoped: another merchant's event is reported as 404 (not 403)
+  // so the endpoint does not reveal that the event exists.
+  const event = await redeliverWebhook(c.env, auth.merchant.id, c.req.param("id"));
   if (!event) {
     return c.json(createError("not_found"), 404);
   }
@@ -1084,7 +1086,10 @@ app.post("/v1/disputes/:id/evidence", async (c) => {
     return c.json(createError("not_found"), 404);
   }
 
-  const updated = await submitEvidence(c.env, dispute.id, body.evidenceUrl);
+  const updated = await submitEvidence(c.env, dispute.id, body.evidenceUrl, auth.merchant.id);
+  if (!updated) {
+    return c.json(createError("not_found"), 404);
+  }
   return c.json(updated);
 });
 

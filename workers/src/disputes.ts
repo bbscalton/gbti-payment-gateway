@@ -135,8 +135,12 @@ export async function updateDispute(
 export async function submitEvidence(
   env: Env,
   disputeId: string,
-  evidenceUrl: string
+  evidenceUrl: string,
+  merchantId: string
 ): Promise<Dispute | null> {
+  // Ownership check inside the data layer too (defense in depth).
+  const owned = await getDisputeForMerchant(env, disputeId, merchantId);
+  if (!owned) return null;
   return updateDispute(env, disputeId, {
     status: "under_review",
     evidenceUrl,
