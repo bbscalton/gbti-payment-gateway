@@ -67,6 +67,15 @@ import {
   submitEvidence,
 } from "./disputes";
 import { logAuditEvent, listAuditLogs } from "./audit";
+import {
+  SANDBOX_3DS_OTP,
+  createChallenge,
+  getChallenge,
+  recordAttempt,
+  finishChallenge,
+  isChallengeExpired,
+  isCorrectSandboxOtp,
+} from "./threeDs";
 import { 
   getIdempotencyRecord, 
   setIdempotencyRecord,
@@ -564,16 +573,19 @@ app.post("/v1/orders/:id/refund", async (c) => {
     return c.json(createError("authentication_required"), 401);
   }
 
-  const idempotencyKey = c.req.header("idempotency-key");
+  const order = await getOrderForMerchant(c.env, c.req.param("id"), auth.merchant.id);
+  if (!order) return c.json(createError("order_not_found"), 404);
+
+  // Refund idempotency keys are scoped by merchant AND order, so reusing a key
+  // on a different order never replays another order's refund response.
+  const rawIdempotencyKey = c.req.header("idempotency-key");
+  const idempotencyKey = rawIdempotencyKey ? refundIdempotencyKey(order.id, rawIdempotencyKey) : undefined;
   if (idempotencyKey) {
     const existing = await getIdempotencyRecord(c.env, auth.merchant.id, idempotencyKey);
     if (existing) {
       return c.json(JSON.parse(existing.response), existing.statusCode as 200 | 201 | 400 | 409);
     }
   }
-
-  const order = await getOrderForMerchant(c.env, c.req.param("id"), auth.merchant.id);
-  if (!order) return c.json(createError("order_not_found"), 404);
 
   let body: { amountCents?: number } = {};
   try {
@@ -686,54 +698,165 @@ app.get("/checkout/:id/result", async (c) => {
   return c.html(renderResultPage(order, success), { headers });
 });
 
-app.get("/3ds-challenge/:paymentRef", async (c) => {
-  const paymentRef = c.req.param("paymentRef");
-  const orderId = c.req.query("orderId");
-  
-  if (!orderId) {
-    return c.html("<h1>Invalid request</h1>", 400);
+export function refundIdempotencyKey(orderId: string, key: string): string {
+  return `refund:${orderId}:${key}`;
+}
+
+function wantsJsonResponse(c: { req: { header: (n: string) => string | undefined } }): boolean {
+  const accept = c.req.header("accept") || "";
+  return accept.includes("application/json") || c.req.header("x-requested-with") === "XMLHttpRequest";
+}
+
+/** Fail an order whose 3DS challenge could not be completed (attempts exhausted / expired). */
+async function failOrderAfter3ds(env: Env, ctx: { waitUntil(p: Promise<unknown>): void }, order: Order): Promise<Order | null> {
+  if (!isValidTransition(order.status, "failed")) return null;
+  const updated = await updateOrder(env, order.id, { status: "failed", threeDsStatus: "failed" });
+  if (updated) {
+    const merchant = await getMerchant(env, order.merchantId);
+    if (merchant?.webhookUrl) {
+      const event = await createWebhookEvent(env, merchant.id, order.id, "payment.failed", updated);
+      ctx.waitUntil(deliverWebhook(env, event, merchant));
+    }
+    ctx.waitUntil(mirrorOrderToFirestore(env, updated));
   }
-  
-  const order = await getOrder(c.env, orderId);
+  return updated;
+}
+
+app.get("/3ds-challenge/:challengeId", async (c) => {
+  const challenge = await getChallenge(c.env, c.req.param("challengeId"));
+  if (!challenge) {
+    return c.html("<h1>Challenge not found</h1>", 404, getSecurityHeaders());
+  }
+  const order = await getOrder(c.env, challenge.orderId);
   if (!order) {
-    return c.html("<h1>Order not found</h1>", 404);
+    return c.html("<h1>Order not found</h1>", 404, getSecurityHeaders());
   }
-  
-  const headers = getSecurityHeaders();
-  return c.html(render3dsChallengePage(order, paymentRef, publicBase(c)), { headers });
+  if (challenge.status !== "pending" || isChallengeExpired(challenge)) {
+    const success = order.status === "captured" || order.status === "authorized";
+    return c.html(renderResultPage(order, success), { headers: getSecurityHeaders() });
+  }
+  const error = c.req.query("error") === "invalid_code" ? "Incorrect code. Please try again." : undefined;
+  return c.html(
+    render3dsChallengePage(order, challenge.id, publicBase(c), {
+      error,
+      attemptsRemaining: Math.max(0, challenge.maxAttempts - challenge.attempts),
+      sandboxOtp: SANDBOX_3DS_OTP,
+    }),
+    { headers: getSecurityHeaders() }
+  );
 });
 
+/**
+ * Complete a 3-D Secure challenge. The order is captured ONLY when a pending,
+ * unexpired, server-issued challenge for a pending-3DS order is presented with
+ * the correct OTP. Challenges are single-use and allow THREE_DS_MAX_ATTEMPTS tries.
+ */
 app.post("/3ds-complete", async (c) => {
-  const form = await c.req.parseBody();
-  const orderId = String(form.orderId || "");
-  const code = String(form.code || "");
-  
-  const order = await getOrder(c.env, orderId);
+  const contentType = c.req.header("content-type") || "";
+  let challengeId = "";
+  let code = "";
+  let claimedOrderId = "";
+  if (contentType.includes("application/json")) {
+    const body = await c.req.json<{ challengeId?: string; code?: string; orderId?: string }>().catch(() => ({} as any));
+    challengeId = String(body.challengeId || "");
+    code = String(body.code || "");
+    claimedOrderId = String(body.orderId || "");
+  } else {
+    const form = await c.req.parseBody();
+    challengeId = String(form.challengeId || "");
+    code = String(form.code || "");
+    claimedOrderId = String(form.orderId || "");
+  }
+
+  const json = wantsJsonResponse(c);
+  const base = publicBase(c);
+  const reject = (status: 400 | 404 | 409 | 410, errCode: ErrorCode, message: string, extra: Record<string, unknown> = {}) =>
+    json
+      ? c.json({ ...createError(errCode, message), ok: false, ...extra }, status)
+      : c.html(`<h1>${message}</h1>`, status, getSecurityHeaders());
+
+  // 1. A server-issued challenge must be presented.
+  const challenge = challengeId ? await getChallenge(c.env, challengeId) : null;
+  if (!challenge) {
+    return reject(400, "3ds_failed", "No valid 3-D Secure challenge was presented");
+  }
+  if (claimedOrderId && claimedOrderId !== challenge.orderId) {
+    return reject(400, "3ds_failed", "Challenge does not match this order");
+  }
+
+  // 2. Single-use: only pending challenges can be completed.
+  if (challenge.status !== "pending") {
+    return reject(409, "invalid_state_transition", "This 3-D Secure challenge has already been used or closed", {
+      challengeStatus: challenge.status,
+    });
+  }
+
+  const order = await getOrder(c.env, challenge.orderId);
   if (!order) {
-    return c.html("<h1>Order not found</h1>", 404);
+    return reject(404, "order_not_found", "Order not found");
   }
-  
-  if (code.length !== 6) {
-    return c.redirect(`${publicBase(c)}/checkout/${orderId}/result?error=invalid_code`, 303);
+
+  // 3. The order must be waiting for exactly this kind of step.
+  if (order.status !== "pending" || order.threeDsStatus !== "challenge_required") {
+    await finishChallenge(c.env, challenge.id, "superseded");
+    return reject(409, "invalid_state_transition", "Order is not awaiting 3-D Secure authentication");
   }
-  
-  const paymentRef = `pay_${crypto.randomUUID().replace(/-/g, "").slice(0, 16)}`;
-  const updated = await capture(c.env, orderId, order.amountCents, paymentRef);
-  
-  if (updated) {
-    const merchant = await getMerchant(c.env, order.merchantId);
-    if (merchant) {
-      await recordPaymentReceived(c.env, merchant.id, orderId, order.amountCents, "GYD");
-      
-      if (merchant.webhookUrl) {
-        const event = await createWebhookEvent(c.env, merchant.id, orderId, "payment.captured", updated);
-        c.executionCtx.waitUntil(deliverWebhook(c.env, event, merchant));
-      }
+
+  // 4. Expiry.
+  if (isChallengeExpired(challenge)) {
+    if (await finishChallenge(c.env, challenge.id, "expired")) {
+      await failOrderAfter3ds(c.env, c.executionCtx, order);
     }
-    c.executionCtx.waitUntil(mirrorOrderToFirestore(c.env, updated));
+    return json
+      ? c.json({ ...createError("3ds_failed", "3-D Secure challenge expired"), ok: false, status: "failed", redirectUrl: `${base}/checkout/${order.id}/result` }, 410)
+      : c.redirect(`${base}/checkout/${order.id}/result`, 303);
   }
-  
-  return c.redirect(`${publicBase(c)}/checkout/${orderId}/result`, 303);
+
+  // 5. Count the attempt atomically (fails if no attempts are left).
+  const attempts = await recordAttempt(c.env, challenge.id);
+  if (attempts === null) {
+    return reject(409, "invalid_state_transition", "This 3-D Secure challenge has no attempts left");
+  }
+
+  // 6. Verify the OTP.
+  if (!isCorrectSandboxOtp(code)) {
+    const remaining = Math.max(0, challenge.maxAttempts - attempts);
+    if (remaining === 0) {
+      if (await finishChallenge(c.env, challenge.id, "failed")) {
+        await failOrderAfter3ds(c.env, c.executionCtx, order);
+      }
+      return json
+        ? c.json({ ...createError("3ds_failed", "Too many incorrect codes. Payment failed."), ok: false, status: "failed", attemptsRemaining: 0, redirectUrl: `${base}/checkout/${order.id}/result` }, 400)
+        : c.redirect(`${base}/checkout/${order.id}/result`, 303);
+    }
+    return json
+      ? c.json({ ...createError("3ds_failed", "Incorrect 3-D Secure code"), ok: false, status: "challenge_required", attemptsRemaining: remaining }, 400)
+      : c.redirect(`${base}/3ds-challenge/${challenge.id}?error=invalid_code`, 303);
+  }
+
+  // 7. Consume the challenge (single-use, race-safe) and only then capture.
+  if (!(await finishChallenge(c.env, challenge.id, "succeeded"))) {
+    return reject(409, "invalid_state_transition", "This 3-D Secure challenge has already been used or closed");
+  }
+  const updatedAuth = await updateOrder(c.env, order.id, { threeDsStatus: "authenticated" });
+  const updated = updatedAuth ? await capture(c.env, order.id, order.amountCents, challenge.paymentRef) : null;
+  if (!updated) {
+    return reject(409, "invalid_state_transition", "Order could not be captured");
+  }
+
+  const merchant = await getMerchant(c.env, order.merchantId);
+  if (merchant) {
+    await recordPaymentReceived(c.env, merchant.id, order.id, order.amountCents, "GYD");
+    if (merchant.webhookUrl) {
+      const event = await createWebhookEvent(c.env, merchant.id, order.id, "payment.captured", updated);
+      c.executionCtx.waitUntil(deliverWebhook(c.env, event, merchant));
+    }
+  }
+  c.executionCtx.waitUntil(mirrorOrderToFirestore(c.env, updated));
+
+  return json
+    ? c.json({ ok: true, status: updated.status, redirectUrl: `${base}/checkout/${order.id}/result`, message: "Payment accepted" })
+    : c.redirect(`${base}/checkout/${order.id}/result`, 303);
 });
 
 app.post("/mock-processor/charge", async (c) => {
@@ -777,15 +900,22 @@ app.post("/mock-processor/charge", async (c) => {
   const result = processCard({ pan, expiryMonth, expiryYear, cvv, captureNow: true });
 
   if (result.outcome === "3ds_required") {
-    const redirectUrl = `${publicBase(c)}${result.threeDsChallengeUrl}?orderId=${order.id}`;
-    const accept = c.req.header("accept") || "";
-    const wantsJson = accept.includes("application/json") || c.req.header("x-requested-with") === "XMLHttpRequest";
-    
-    if (wantsJson) {
+    // Only a pending order can enter 3DS; record a server-side challenge.
+    if (order.status !== "pending") {
+      return c.json(createError("invalid_state_transition", "Order is not payable in its current state"), 409);
+    }
+    await updateOrder(c.env, order.id, { threeDsStatus: "challenge_required" });
+    const challenge = await createChallenge(c.env, order.id, result.paymentRef);
+    const redirectUrl = `${publicBase(c)}/3ds-challenge/${challenge.id}`;
+
+    if (wantsJsonResponse(c)) {
       return c.json({
         ok: false,
         status: "3ds_required",
+        challengeId: challenge.id,
+        challengeExpiresAt: challenge.expiresAt,
         threeDsChallengeUrl: redirectUrl,
+        redirectUrl,
         message: "3-D Secure verification required",
       });
     }
@@ -1105,8 +1235,7 @@ app.get("/v1/audit", async (c) => {
   const startDate = c.req.query("startDate");
   const endDate = c.req.query("endDate");
 
-  const logs = await listAuditLogs(c.env, {
-    merchantId: auth.merchant.id,
+  const logs = await listAuditLogs(c.env, auth.merchant.id, {
     action,
     startDate,
     endDate,

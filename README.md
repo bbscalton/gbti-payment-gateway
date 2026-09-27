@@ -126,10 +126,32 @@ Redirect the customer to the `checkoutUrl` returned.
 | `4000 0000 0000 0002` | Declined |
 | `4000 0000 0000 0010` | Insufficient funds |
 | `4000 0000 0000 0028` | Expired card |
-| `4000 0000 0000 3220` | 3DS challenge required |
+| `4000 0000 0000 3220` | 3DS challenge required (sandbox OTP `123456`) |
 | `5555 5555 5555 4444` | Success (Mastercard) |
 
 **Important:** Only documented test cards are accepted. All other card numbers (even valid Luhn) are declined with `use_test_card` error.
+
+### 3-D Secure (sandbox)
+
+Card `4000 0000 0000 3220` requires a 3-D Secure challenge:
+
+1. `POST /mock-processor/charge` returns `status: "3ds_required"` with a server-issued `challengeId`
+   and a `redirectUrl` to `/3ds-challenge/<challengeId>`. The order stays `pending` with
+   `threeDsStatus: "challenge_required"`.
+2. The customer enters the one-time code on the challenge page. **The sandbox OTP is `123456`.**
+   Any other code is rejected.
+3. The page posts `challengeId` + `code` to `POST /3ds-complete`. The order is captured only if the
+   challenge is still pending, has not expired, belongs to that order, the order is still awaiting 3DS,
+   and the code is correct.
+
+Rules:
+- Challenges expire after **10 minutes**. Completing an expired challenge fails the payment (`410`).
+- **3 attempts** per challenge. After 3 wrong codes the challenge and the payment fail.
+- Challenges are **single-use**. Reusing a completed or closed challenge returns `409`.
+- Starting a new 3DS charge on the same order supersedes any earlier pending challenge.
+- `/3ds-complete` without a valid server-issued challenge id returns `400` and never changes the order.
+
+JSON clients can send `Accept: application/json` to get JSON responses instead of redirects.
 
 ## API Reference
 

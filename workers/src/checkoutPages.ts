@@ -271,7 +271,12 @@ export function renderResultPage(order: Order, success: boolean): string {
 </html>`;
 }
 
-export function render3dsChallengePage(order: Order, paymentRef: string, publicBaseUrl: string): string {
+export function render3dsChallengePage(
+  order: Order,
+  challengeId: string,
+  publicBaseUrl: string,
+  opts: { error?: string; attemptsRemaining: number; sandboxOtp: string }
+): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -310,11 +315,13 @@ export function render3dsChallengePage(order: Order, paymentRef: string, publicB
   <div class="card">
     <div class="brand">3-D Secure Challenge</div>
     <h1>Verify Your Identity</h1>
-    <p>Enter the code sent to your registered phone/email:</p>
-    <div class="code">123456</div>
-    <p style="font-size: 0.85rem; color: #a0aec0;">(Sandbox: Enter any 6-digit code to proceed)</p>
+    <p>Enter the one-time code sent to your registered phone/email:</p>
+    <div class="code">${escapeHtml(opts.sandboxOtp)}</div>
+    <p style="font-size: 0.85rem; color: #a0aec0;">(Sandbox: the test code is ${escapeHtml(opts.sandboxOtp)}. Any other code is rejected.)</p>
+    ${opts.error ? `<p style="color: #c53030; font-weight: 600;">${escapeHtml(opts.error)}</p>` : ""}
+    <p style="font-size: 0.85rem;">Attempts remaining: ${opts.attemptsRemaining}. This code expires in 10 minutes.</p>
     <form method="POST" action="${escapeHtml(publicBaseUrl)}/3ds-complete">
-      <input type="hidden" name="paymentRef" value="${escapeHtml(paymentRef)}" />
+      <input type="hidden" name="challengeId" value="${escapeHtml(challengeId)}" />
       <input type="hidden" name="orderId" value="${escapeHtml(order.id)}" />
       <input type="text" name="code" maxlength="6" placeholder="Enter code" required />
       <button type="submit">Verify</button>

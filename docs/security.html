@@ -151,6 +151,7 @@
 
       <h3>Authentication</h3>
       <ul class="bullets">
+        <li>3-D Secure (sandbox): server-issued, single-use challenges that expire after 10 minutes, with 3 attempts and a documented test OTP. An order is never captured without a successful challenge</li>
         <li>Per-merchant API keys with test/live separation (sk_test_/sk_live_); onboarding is admin-only and live keys are issued only by an admin for approved merchants</li>
         <li>Keys hashed using HMAC-SHA256 before storage</li>
         <li>Bearer token authentication on all API calls</li>
