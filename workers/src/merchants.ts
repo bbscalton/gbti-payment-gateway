@@ -41,12 +41,23 @@ async function hashApiKey(apiKey: string, masterKey: string): Promise<string> {
     .join("");
 }
 
+function requireMasterKey(env: Env): string {
+  const key = env.MERCHANT_MASTER_KEY;
+  if (!key) throw new Error("MERCHANT_MASTER_KEY is not configured");
+  return key;
+}
+
 function generateApiKey(prefix: "sk_test_" | "sk_live_"): string {
   const randomPart = crypto.randomUUID().replace(/-/g, "") + 
                      crypto.randomUUID().replace(/-/g, "").slice(0, 16);
   return `${prefix}${randomPart}`;
 }
 
+/**
+ * Create a merchant. Sandbox onboarding issues ONLY a test key (sk_test_).
+ * Live keys are never handed out at signup; they can only be issued by an
+ * authenticated admin action (see issueLiveKey / POST /v1/admin/merchants/:id/live-key).
+ */
 export async function createMerchant(
   env: Env,
   input: {
@@ -55,20 +66,16 @@ export async function createMerchant(
     webhookUrl?: string;
     kybData?: MerchantKybData;
   }
-): Promise<{ merchant: Merchant; testApiKey: string; liveApiKey: string }> {
+): Promise<{ merchant: Merchant; testApiKey: string }> {
   const id = `mch_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
   const now = new Date().toISOString();
-  
+
   const testApiKey = generateApiKey("sk_test_");
-  const liveApiKey = generateApiKey("sk_live_");
-  
-  const masterKey = env.MERCHANT_MASTER_KEY || env.WEBHOOK_SECRET;
+
+  const masterKey = requireMasterKey(env);
   const testKeyHash = await hashApiKey(testApiKey, masterKey);
-  const liveKeyHash = await hashApiKey(liveApiKey, masterKey);
-  
   const testKeyPrefix = testApiKey.slice(0, API_KEY_PREFIX_LENGTH);
-  const liveKeyPrefix = liveApiKey.slice(0, API_KEY_PREFIX_LENGTH);
-  
+
   const webhookSecret = `whsec_${crypto.randomUUID().replace(/-/g, "")}`;
 
   await env.DB.prepare(
@@ -86,9 +93,9 @@ export async function createMerchant(
       input.webhookUrl || null,
       webhookSecret,
       testKeyHash,
-      liveKeyHash,
+      null,
       testKeyPrefix,
-      liveKeyPrefix,
+      null,
       input.kybData ? JSON.stringify(input.kybData) : null,
       now,
       now
@@ -98,7 +105,22 @@ export async function createMerchant(
   const merchant = await getMerchant(env, id);
   if (!merchant) throw new Error("Failed to create merchant");
 
-  return { merchant, testApiKey, liveApiKey };
+  return { merchant, testApiKey };
+}
+
+/**
+ * Admin-only: issue (or rotate) a live key. Only allowed for approved merchants.
+ */
+export async function issueLiveKey(
+  env: Env,
+  merchantId: string
+): Promise<{ apiKey: string } | { error: "merchant_not_found" | "not_approved" }> {
+  const merchant = await getMerchant(env, merchantId);
+  if (!merchant) return { error: "merchant_not_found" };
+  if (merchant.status !== "approved") return { error: "not_approved" };
+  const result = await rotateApiKeys(env, merchantId, "live");
+  if (!result) return { error: "merchant_not_found" };
+  return result;
 }
 
 export async function getMerchant(env: Env, id: string): Promise<Merchant | null> {
@@ -127,8 +149,10 @@ export async function authenticateMerchant(
   const isLiveKey = apiKey.startsWith("sk_live_");
   
   if (!isTestKey && !isLiveKey) return null;
-  
-  const masterKey = env.MERCHANT_MASTER_KEY || env.WEBHOOK_SECRET;
+
+  // Fail closed: without the master key no API key can be verified.
+  if (!env.MERCHANT_MASTER_KEY) return null;
+  const masterKey = env.MERCHANT_MASTER_KEY;
   const keyHash = await hashApiKey(apiKey, masterKey);
   const keyPrefix = apiKey.slice(0, API_KEY_PREFIX_LENGTH);
   
@@ -201,7 +225,7 @@ export async function rotateApiKeys(
   const prefix = keyType === "test" ? "sk_test_" : "sk_live_";
   const newApiKey = generateApiKey(prefix);
   
-  const masterKey = env.MERCHANT_MASTER_KEY || env.WEBHOOK_SECRET;
+  const masterKey = requireMasterKey(env);
   const newKeyHash = await hashApiKey(newApiKey, masterKey);
   const newKeyPrefix = newApiKey.slice(0, API_KEY_PREFIX_LENGTH);
 

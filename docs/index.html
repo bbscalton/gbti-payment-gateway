@@ -40,7 +40,7 @@
         merchant apps never see PAN, expiry, or CVV.
       </p>
       <div class="cta-row">
-        <a class="btn primary" href="https://github.com/bbscalton/gbti-payment-gateway">View on GitHub</a>
+        <a class="btn primary" href="https://github.com/bbscalton/sapp-gateway">View on GitHub</a>
         <a class="btn ghost" href="security.html">Security Overview</a>
       </div>
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 100, 100, 0.15); border: 1px solid rgba(255, 100, 100, 0.3); border-radius: 4px;">
@@ -63,7 +63,7 @@
           <span class="flow-step">1</span>
           <span class="flow-body">
             <strong>Register Merchant</strong>
-            Create a merchant account and receive API keys (sk_test_/sk_live_).
+            An admin creates your merchant account and gives you a sandbox test key (sk_test_). Live keys are issued by an admin only after approval.
           </span>
         </li>
         <li>
@@ -151,18 +151,20 @@
 
       <h3>API Keys</h3>
       <p>
-        You receive two API keys when you create a merchant account:
+        Merchant accounts are created by a Sapp admin (<code>POST /v1/merchants</code> requires the
+        gateway admin key; unauthenticated requests are rejected with <code>401</code>).
+        Signup issues a <strong>test key only</strong>:
       </p>
       <ul class="bullets">
-        <li><code>sk_test_...</code> — Test mode key (sandbox transactions)</li>
-        <li><code>sk_live_...</code> — Live mode key (real transactions, when enabled)</li>
+        <li><code>sk_test_...</code> — Test mode key (sandbox transactions), issued at signup</li>
+        <li><code>sk_live_...</code> — Live mode key, issued only by an admin for approved merchants (real transactions, when enabled)</li>
       </ul>
 
       <h3>Authentication Header</h3>
       <pre><code>Authorization: Bearer sk_test_abc123def456...</code></pre>
 
       <h3>Example Request</h3>
-      <pre><code>curl -X POST https://YOUR-WORKER.workers.dev/v1/orders \
+      <pre><code>curl -X POST https://sapp-gateway.neuereatec.workers.dev/v1/orders \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk_test_abc123..." \
   -H "Idempotency-Key: unique-request-id-123" \
@@ -188,7 +190,9 @@
             <tr><th>Method</th><th>Path</th><th>Description</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>POST</code></td><td><code>/v1/merchants</code></td><td>Create merchant account</td></tr>
+            <tr><td><code>POST</code></td><td><code>/v1/merchants</code></td><td>Create merchant account (admin only; returns an <code>sk_test_</code> key)</td></tr>
+            <tr><td><code>POST</code></td><td><code>/v1/admin/merchants/:id/status</code></td><td>Approve/suspend a merchant (admin only)</td></tr>
+            <tr><td><code>POST</code></td><td><code>/v1/admin/merchants/:id/live-key</code></td><td>Issue an <code>sk_live_</code> key for an approved merchant (admin only)</td></tr>
             <tr><td><code>GET</code></td><td><code>/v1/merchants/me</code></td><td>Get current merchant info</td></tr>
             <tr><td><code>POST</code></td><td><code>/v1/orders</code></td><td>Create order</td></tr>
             <tr><td><code>GET</code></td><td><code>/v1/orders</code></td><td>List your orders</td></tr>
