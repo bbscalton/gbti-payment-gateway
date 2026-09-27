@@ -43,7 +43,9 @@ import {
   updateMerchant,
   rotateApiKeys,
   listMerchants,
+  issueLiveKey,
 } from "./merchants";
+import { checkAdminAuth } from "./admin";
 import { 
   createWebhookEvent, 
   deliverWebhook, 
@@ -76,7 +78,7 @@ import type { Env, Order, Merchant, ErrorCode } from "./types";
 
 const app = new Hono<{ Bindings: Env }>();
 
-const DOCS_URL = "https://bbscalton.github.io/gbti-payment-gateway/";
+const DOCS_URL = "https://bbscalton.github.io/sapp-gateway/";
 const API_VERSION = "v1";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -163,6 +165,22 @@ async function requireAuth(
   return authenticateMerchant(c.env, apiKey);
 }
 
+/**
+ * Admin guard: `Authorization: Bearer <MERCHANT_MASTER_KEY>`.
+ * Returns a Response to send when the caller is NOT an admin, or null if OK.
+ */
+function adminGuard(c: any): Response | null {
+  const result = checkAdminAuth(c.req.header("authorization"), c.env.MERCHANT_MASTER_KEY);
+  if (result === "ok") return null;
+  if (result === "not_configured") {
+    return c.json(createError("internal_error", "Admin access is not configured on this gateway"), 503);
+  }
+  if (result === "missing") {
+    return c.json(createError("authentication_required", "Admin authorization required"), 401);
+  }
+  return c.json(createError("forbidden", "Invalid admin credentials"), 403);
+}
+
 async function requireWebhookSecret(env: Env): Promise<string | null> {
   const secret = env.WEBHOOK_SECRET;
   if (!secret) return null;
@@ -211,7 +229,11 @@ app.get("/health", (c) =>
   })
 );
 
+// Admin-only: merchant onboarding. Issues a sandbox test key (sk_test_) only.
 app.post("/v1/merchants", async (c) => {
+  const denied = adminGuard(c);
+  if (denied) return denied;
+
   let body: {
     name?: string;
     email?: string;
@@ -241,7 +263,7 @@ app.post("/v1/merchants", async (c) => {
       action: "merchant.created",
       resourceType: "merchant",
       resourceId: result.merchant.id,
-      actorType: "system",
+      actorType: "admin",
       ipAddress: getClientIp(c),
     });
 
@@ -255,8 +277,7 @@ app.post("/v1/merchants", async (c) => {
         createdAt: result.merchant.createdAt,
       },
       testApiKey: result.testApiKey,
-      liveApiKey: result.liveApiKey,
-      note: "Store these API keys securely. They will not be shown again.",
+      note: "Store this test API key securely. It will not be shown again. Live keys are issued only by an admin after the merchant is approved.",
     }, 201);
   } catch (e: any) {
     if (e.message?.includes("UNIQUE constraint")) {
@@ -264,6 +285,66 @@ app.post("/v1/merchants", async (c) => {
     }
     throw e;
   }
+});
+
+// Admin-only: change merchant status (pending | approved | suspended).
+app.post("/v1/admin/merchants/:id/status", async (c) => {
+  const denied = adminGuard(c);
+  if (denied) return denied;
+
+  let body: { status?: string } = {};
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json(createError("invalid_request", "Invalid JSON body"), 400);
+  }
+  const allowed = ["pending", "approved", "suspended"];
+  if (!body.status || !allowed.includes(body.status)) {
+    return c.json(createError("invalid_request", `status must be one of: ${allowed.join(", ")}`), 400);
+  }
+
+  const updated = await updateMerchant(c.env, c.req.param("id"), { status: body.status as any });
+  if (!updated) return c.json(createError("merchant_not_found"), 404);
+
+  await logAuditEvent(c.env, {
+    merchantId: updated.id,
+    action: "merchant.updated",
+    resourceType: "merchant",
+    resourceId: updated.id,
+    actorType: "admin",
+    ipAddress: getClientIp(c),
+    details: { status: updated.status },
+  });
+
+  return c.json({ merchant: { id: updated.id, status: updated.status, updatedAt: updated.updatedAt } });
+});
+
+// Admin-only: issue (or rotate) a live key for an APPROVED merchant.
+app.post("/v1/admin/merchants/:id/live-key", async (c) => {
+  const denied = adminGuard(c);
+  if (denied) return denied;
+
+  const result = await issueLiveKey(c.env, c.req.param("id"));
+  if ("error" in result) {
+    if (result.error === "merchant_not_found") return c.json(createError("merchant_not_found"), 404);
+    return c.json(createError("forbidden", "Merchant must be approved before a live key can be issued"), 403);
+  }
+
+  await logAuditEvent(c.env, {
+    merchantId: c.req.param("id"),
+    action: "merchant.api_key_rotated",
+    resourceType: "merchant",
+    resourceId: c.req.param("id"),
+    actorType: "admin",
+    ipAddress: getClientIp(c),
+    details: { keyType: "live" },
+  });
+
+  return c.json({
+    merchantId: c.req.param("id"),
+    liveApiKey: result.apiKey,
+    note: "Store this live API key securely. It will not be shown again.",
+  }, 201);
 });
 
 app.get("/v1/merchants/me", async (c) => {

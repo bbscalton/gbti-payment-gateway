@@ -68,15 +68,36 @@ npx wrangler secret put FIREBASE_CLIENT_EMAIL
 npx wrangler secret put FIREBASE_PRIVATE_KEY
 ```
 
-### 3. Create a Merchant Account
+### 3. Create a Merchant Account (admin only)
+
+Merchant onboarding is an **admin action**: it requires the gateway's
+`MERCHANT_MASTER_KEY` as a bearer token. Unauthenticated requests get `401`,
+wrong keys get `403`, and if `MERCHANT_MASTER_KEY` is not configured the
+endpoint fails closed with `503`.
 
 ```bash
 curl -X POST https://sapp-gateway.neuereatec.workers.dev/v1/merchants \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $MERCHANT_MASTER_KEY" \
   -d '{"name": "My Store", "email": "merchant@example.com"}'
 ```
 
-Save the `testApiKey` and `liveApiKey` returned — they won't be shown again.
+The response contains a **test key only** (`testApiKey`, `sk_test_...`) — save it,
+it won't be shown again. No live key is issued at signup.
+
+Live keys (`sk_live_...`) are issued only by an admin, and only after the merchant is approved:
+
+```bash
+# Approve the merchant (admin)
+curl -X POST https://sapp-gateway.neuereatec.workers.dev/v1/admin/merchants/MERCHANT_ID/status \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $MERCHANT_MASTER_KEY" \
+  -d '{"status": "approved"}'
+
+# Issue (or rotate) the live key (admin)
+curl -X POST https://sapp-gateway.neuereatec.workers.dev/v1/admin/merchants/MERCHANT_ID/live-key \
+  -H "Authorization: Bearer $MERCHANT_MASTER_KEY"
+```
 
 ### 4. Create an Order
 
@@ -116,7 +137,9 @@ Redirect the customer to the `checkoutUrl` returned.
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/v1/merchants` | Create merchant account |
+| `POST` | `/v1/merchants` | Create merchant account (**admin**: `Bearer MERCHANT_MASTER_KEY`; returns `sk_test_` key only) |
+| `POST` | `/v1/admin/merchants/:id/status` | Set merchant status `pending`/`approved`/`suspended` (**admin**) |
+| `POST` | `/v1/admin/merchants/:id/live-key` | Issue/rotate an `sk_live_` key for an approved merchant (**admin**) |
 | `GET` | `/v1/merchants/me` | Get current merchant info |
 | `POST` | `/v1/orders` | Create order |
 | `GET` | `/v1/orders` | List merchant's orders |
@@ -139,7 +162,8 @@ Include your API key in the Authorization header:
 Authorization: Bearer sk_test_xxxx
 ```
 
-Test keys (`sk_test_`) work in sandbox mode. Live keys (`sk_live_`) are for production.
+Test keys (`sk_test_`) work in sandbox mode and are the only keys issued at signup.
+Live keys (`sk_live_`) are issued only through the admin live-key endpoint, for approved merchants.
 
 ### Idempotency
 
