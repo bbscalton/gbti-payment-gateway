@@ -219,19 +219,40 @@ export async function getPendingWebhooks(
   );
 }
 
+/** Fetch a webhook event only if it belongs to the given merchant. */
+export async function getWebhookEventForMerchant(
+  env: Env,
+  id: string,
+  merchantId: string
+): Promise<WebhookEvent | null> {
+  const row = await env.DB.prepare(
+    `SELECT * FROM webhook_events WHERE id = ? AND merchant_id = ?`
+  )
+    .bind(id, merchantId)
+    .first();
+  if (!row) return null;
+  return rowToWebhookEvent(row as Record<string, unknown>);
+}
+
+/**
+ * Re-queue a webhook event for delivery. Scoped to the owning merchant:
+ * returns null (-> 404) when the event does not exist OR belongs to another
+ * merchant, so callers cannot probe for other merchants' event IDs.
+ */
 export async function redeliverWebhook(
   env: Env,
+  merchantId: string,
   eventId: string
 ): Promise<WebhookEvent | null> {
-  const event = await getWebhookEvent(env, eventId);
+  const event = await getWebhookEventForMerchant(env, eventId, merchantId);
   if (!event) return null;
 
   const now = new Date().toISOString();
   await env.DB.prepare(
-    `UPDATE webhook_events SET status = ?, next_attempt_at = ? WHERE id = ?`
+    `UPDATE webhook_events SET status = ?, next_attempt_at = ? WHERE id = ? AND merchant_id = ?`
   )
-    .bind("pending", now, eventId)
+    .bind("pending", now, eventId, merchantId)
     .run();
 
-  return getWebhookEvent(env, eventId);
+  return getWebhookEventForMerchant(env, eventId, merchantId);
 }
